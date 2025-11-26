@@ -192,3 +192,18 @@ export const roundRobinConfig = pgTable("round_robin_config", {
   currentIndex: integer("current_index").default(0),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
+
+// ===========================================
+// Dashboard Tables
+// ===========================================
+
+export const sellerGoals = pgTable("seller_goals", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  sellerId: uuid("seller_id")
+    .notNull()
+    .references(() => sellers.id, { onDelete: "cascade" }),
+  month: integer("month").notNull(),
+  year: integer("year").notNull(),
+  targetAccepted: integer("target_accepted").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+});
