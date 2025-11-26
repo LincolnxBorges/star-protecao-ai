@@ -222,3 +222,10 @@ Consulte `.specify/memory/constitution.md` para os 10 princípios fundamentais d
 10. Conventional Commits
 
 A constituição é a fonte definitiva de verdade para decisões arquiteturais.
+
+## Active Technologies
+- TypeScript 5.x com Next.js 15 (App Router) + Next.js, React, Drizzle ORM, Better Auth, Zod, react-hook-form, shadcn/ui, Tailwind CSS 4 (001-cotacao-veicular)
+- PostgreSQL via Drizzle ORM (schema em `lib/schema.ts`) (001-cotacao-veicular)
+
+## Recent Changes
+- 001-cotacao-veicular: Added TypeScript 5.x com Next.js 15 (App Router) + Next.js, React, Drizzle ORM, Better Auth, Zod, react-hook-form, shadcn/ui, Tailwind CSS 4
