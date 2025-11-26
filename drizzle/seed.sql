@@ -2,6 +2,10 @@
 -- SEED: PRICING RULES (Baseado na planilha fornecida)
 -- =====================================================
 
+-- Limpar dados existentes
+TRUNCATE TABLE pricing_rules CASCADE;
+TRUNCATE TABLE blacklist CASCADE;
+
 -- =====================================================
 -- CATEGORIA: NORMAL (Veículos leves - uso particular)
 -- =====================================================
@@ -24,7 +28,7 @@ INSERT INTO pricing_rules (categoria, faixa_min, faixa_max, mensalidade) VALUES
 ('NORMAL', 150000.01, 160000.00, 480.92),
 ('NORMAL', 160000.01, 170000.00, 506.75),
 ('NORMAL', 170000.01, 180000.00, 532.58),
-('NORMAL', 180000.01, 999999999.99, 558.41);
+('NORMAL', 180000.01, 999999999.99, 558.41); -- Último range (acima do limite)
 
 -- =====================================================
 -- CATEGORIA: ESPECIAL (Veículos leves - uso comercial)
@@ -48,7 +52,7 @@ INSERT INTO pricing_rules (categoria, faixa_min, faixa_max, mensalidade) VALUES
 ('ESPECIAL', 160000.01, 170000.00, 813.75),
 ('ESPECIAL', 170000.01, 180000.00, 863.75),
 ('ESPECIAL', 180000.01, 190000.00, 913.75),
-('ESPECIAL', 190000.01, 999999999.99, 963.75);
+('ESPECIAL', 190000.01, 999999999.99, 963.75); -- Último range (acima do limite)
 
 -- =====================================================
 -- CATEGORIA: UTILITARIO (SUVs, Caminhonetes, Vans)
@@ -72,7 +76,7 @@ INSERT INTO pricing_rules (categoria, faixa_min, faixa_max, mensalidade) VALUES
 ('UTILITARIO', 375000.01, 400000.00, 1087.19),
 ('UTILITARIO', 400000.01, 425000.00, 1152.53),
 ('UTILITARIO', 425000.01, 450000.00, 1217.87),
-('UTILITARIO', 450000.01, 999999999.99, 1283.22);
+('UTILITARIO', 450000.01, 999999999.99, 1283.22); -- Último range (acima do limite)
 
 -- =====================================================
 -- CATEGORIA: MOTO (Motocicletas)
@@ -96,35 +100,46 @@ INSERT INTO pricing_rules (categoria, faixa_min, faixa_max, mensalidade) VALUES
 ('MOTO', 76000.01, 80000.00, 519.00),
 ('MOTO', 80000.01, 86000.00, 549.00),
 ('MOTO', 86000.01, 90000.00, 579.00),
-('MOTO', 90000.01, 999999999.99, 609.00);
+('MOTO', 90000.01, 999999999.99, 609.00); -- Último range (acima do limite)
 
 -- =====================================================
 -- BLACKLIST: MARCAS COMPLETAS
 -- =====================================================
 INSERT INTO blacklist (marca, modelo, motivo) VALUES
-('AUDI', NULL, 'Nao trabalhamos com esta marca'),
-('BMW', NULL, 'Nao trabalhamos com esta marca'),
-('MERCEDES-BENZ', NULL, 'Nao trabalhamos com esta marca'),
-('MERCEDES', NULL, 'Nao trabalhamos com esta marca'),
-('VOLVO', NULL, 'Nao trabalhamos com esta marca'),
-('LEXUS', NULL, 'Nao trabalhamos com esta marca'),
-('JAGUAR', NULL, 'Nao trabalhamos com esta marca'),
-('PORSCHE', NULL, 'Nao trabalhamos com esta marca'),
-('LAND ROVER', NULL, 'Nao trabalhamos com esta marca'),
-('LAND-ROVER', NULL, 'Nao trabalhamos com esta marca');
+('AUDI', NULL, 'Não trabalhamos com esta marca'),
+('BMW', NULL, 'Não trabalhamos com esta marca'),
+('MERCEDES-BENZ', NULL, 'Não trabalhamos com esta marca'),
+('MERCEDES', NULL, 'Não trabalhamos com esta marca'), -- Variação do nome
+('VOLVO', NULL, 'Não trabalhamos com esta marca'),
+('LEXUS', NULL, 'Não trabalhamos com esta marca'),
+('JAGUAR', NULL, 'Não trabalhamos com esta marca'),
+('PORSCHE', NULL, 'Não trabalhamos com esta marca'),
+('LAND ROVER', NULL, 'Não trabalhamos com esta marca'),
+('LAND-ROVER', NULL, 'Não trabalhamos com esta marca'); -- Variação do nome
 
 -- =====================================================
 -- BLACKLIST: MODELOS ESPECÍFICOS
 -- =====================================================
 INSERT INTO blacklist (marca, modelo, motivo) VALUES
-('FORD', 'FOCUS', 'Nao trabalhamos com este modelo'),
-('FORD', 'FUSION', 'Nao trabalhamos com este modelo'),
-('CITROEN', 'CACTUS', 'Nao trabalhamos com este modelo'),
-('CITROËN', 'CACTUS', 'Nao trabalhamos com este modelo'),
-('HYUNDAI', 'ELANTRA', 'Nao trabalhamos com este modelo'),
-('HONDA', 'ACCORD', 'Nao trabalhamos com este modelo');
+('FORD', 'FOCUS', 'Não trabalhamos com este modelo'),
+('FORD', 'FUSION', 'Não trabalhamos com este modelo'),
+('CITROEN', 'CACTUS', 'Não trabalhamos com este modelo'),
+('CITROËN', 'CACTUS', 'Não trabalhamos com este modelo'), -- Variação com acento
+('HYUNDAI', 'ELANTRA', 'Não trabalhamos com este modelo'),
+('HONDA', 'ACCORD', 'Não trabalhamos com este modelo');
 
 -- =====================================================
 -- CONFIGURAÇÃO ROUND-ROBIN
 -- =====================================================
-INSERT INTO round_robin_config (current_index) VALUES (0);
+INSERT INTO round_robin_config (current_index) VALUES (0)
+ON CONFLICT DO NOTHING;
+
+-- =====================================================
+-- VERIFICAÇÃO
+-- =====================================================
+SELECT categoria, COUNT(*) as faixas, MIN(mensalidade) as menor, MAX(mensalidade) as maior
+FROM pricing_rules
+GROUP BY categoria
+ORDER BY categoria;
+
+SELECT marca, modelo, motivo FROM blacklist ORDER BY marca, modelo;

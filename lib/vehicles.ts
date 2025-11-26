@@ -16,24 +16,50 @@ import { normalizePlaca } from "@/lib/validations/placa";
 export type VehicleCategory = "NORMAL" | "ESPECIAL" | "UTILITARIO" | "MOTO";
 export type UsageType = "PARTICULAR" | "COMERCIAL";
 export type ClientCategory = "LEVE" | "UTILITARIO";
-export type VehicleType = "AUTOMOVEL" | "MOTOCICLETA" | "CAMINHAO";
+export type VehicleType = "AUTOMOVEL" | "MOTOCICLETA" | "CAMINHAO" | "INEXISTENTE";
 
 interface PowerCrmResponse {
-  codFipe: string;
+  mensagem: string;
+  codFipe: string | null;
   vehicleType: VehicleType;
   brand: string;
-  model: string;
   year: string;
   fuel: string;
   color: string;
-  error?: string;
+  city?: string;
+  uf?: string;
+  chassi?: string;
+  error?: string | null;
 }
 
-interface WdApi2FipeData {
+interface WdApi2FipeItem {
   codigo_fipe: string;
   texto_modelo: string;
   texto_valor: string;
   score: number;
+}
+
+interface WdApi2Response {
+  MARCA: string;
+  MODELO: string;
+  ano: string;
+  fipe?: {
+    dados: WdApi2FipeItem[];
+  };
+  mensagemRetorno: string;
+}
+
+// Helper to extract brand from PowerCRM response (format: "VW SANTANA CG" -> "VW")
+function extractBrandFromPowerCrm(brandString: string): string {
+  // PowerCRM returns brand + model together, first word is usually the brand
+  const parts = brandString.split(" ");
+  return parts[0] || brandString;
+}
+
+// Helper to extract model from PowerCRM response (format: "VW SANTANA CG" -> "SANTANA CG")
+function extractModelFromPowerCrm(brandString: string): string {
+  const parts = brandString.split(" ");
+  return parts.slice(1).join(" ") || brandString;
 }
 
 export interface VehicleLookupResult {
@@ -108,7 +134,7 @@ export function determineCategory(
     return "ESPECIAL";
   }
 
-  // Default: private use light vehicle
+  // Default: private use light vehicle (includes AUTOMOVEL and INEXISTENTE)
   return "NORMAL";
 }
 
@@ -138,13 +164,20 @@ async function fetchWithRetry<T>(
   delay = 2000
 ): Promise<T> {
   try {
+    console.log(`Fetching: ${url}`);
     const response = await fetch(url, options);
+    console.log(`Response status: ${response.status}`);
     if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
+      const text = await response.text();
+      console.error(`Response error: ${text}`);
+      throw new Error(`HTTP ${response.status}: ${text}`);
     }
-    return response.json();
+    const data = await response.json();
+    return data;
   } catch (error) {
+    console.error(`Fetch error for ${url}:`, error);
     if (retries > 0) {
+      console.log(`Retrying in ${delay}ms...`);
       await new Promise((resolve) => setTimeout(resolve, delay));
       return fetchWithRetry(url, options, retries - 1, delay);
     }
@@ -189,9 +222,9 @@ export async function lookupPlateOnPowerCRM(
 // ===========================================
 
 export async function getFipeValue(
-  codFipe: string,
+  codFipe: string | null,
   placa: string
-): Promise<{ valorFipe: number; codigoFipe: string; modelo: string }> {
+): Promise<{ valorFipe: number; codigoFipe: string; modelo: string; marca: string }> {
   const token = process.env.WDAPI2_TOKEN;
   if (!token) {
     throw new Error("WDAPI2_TOKEN not configured");
@@ -199,8 +232,9 @@ export async function getFipeValue(
 
   const normalizedPlaca = normalizePlaca(placa);
 
-  const response = await fetchWithRetry<{ fipeData: WdApi2FipeData[] }>(
-    `https://api.wdapi2.com.br/consulta/${normalizedPlaca}/${token}`,
+  // Note: Using wdapi2.com.br (without api. prefix) due to SSL certificate mismatch
+  const response = await fetchWithRetry<WdApi2Response>(
+    `https://wdapi2.com.br/consulta/${normalizedPlaca}/${token}`,
     {
       method: "GET",
       headers: {
@@ -209,7 +243,8 @@ export async function getFipeValue(
     }
   );
 
-  const fipeData = response.fipeData || [];
+  // WDAPI2 returns fipe.dados, not fipeData
+  const fipeData = response.fipe?.dados || [];
 
   if (fipeData.length === 0) {
     throw new Error("No FIPE data available");
@@ -224,7 +259,8 @@ export async function getFipeValue(
   return {
     valorFipe,
     codigoFipe: selectedFipe.codigo_fipe,
-    modelo: selectedFipe.texto_modelo,
+    modelo: response.MODELO || selectedFipe.texto_modelo,
+    marca: response.MARCA,
   };
 }
 
@@ -233,13 +269,15 @@ export async function getFipeValue(
 // ===========================================
 
 export function selectFipeValue(
-  fipeData: WdApi2FipeData[],
-  codFipe: string
-): WdApi2FipeData {
-  // 1. Try exact match by codigo_fipe
-  const exactMatch = fipeData.find((f) => f.codigo_fipe === codFipe);
-  if (exactMatch) {
-    return exactMatch;
+  fipeData: WdApi2FipeItem[],
+  codFipe: string | null
+): WdApi2FipeItem {
+  // 1. Try exact match by codigo_fipe (if provided)
+  if (codFipe) {
+    const exactMatch = fipeData.find((f) => f.codigo_fipe === codFipe);
+    if (exactMatch) {
+      return exactMatch;
+    }
   }
 
   // 2. Fallback: highest score
@@ -274,7 +312,9 @@ export async function lookupVehicle(
     let powerCrmData: PowerCrmResponse;
     try {
       powerCrmData = await lookupPlateOnPowerCRM(normalizedPlaca);
-    } catch {
+      console.log("PowerCRM response:", powerCrmData);
+    } catch (error) {
+      console.error("PowerCRM error:", error);
       return {
         success: false,
         error: {
@@ -284,11 +324,28 @@ export async function lookupVehicle(
       };
     }
 
-    // 2. Check blacklist
-    const blacklistResult = await isBlacklisted(
-      powerCrmData.brand,
-      powerCrmData.model
-    );
+    // 2. Get FIPE value first (this also gives us proper marca/modelo)
+    let fipeResult;
+    try {
+      fipeResult = await getFipeValue(powerCrmData.codFipe, normalizedPlaca);
+      console.log("FIPE result:", fipeResult);
+    } catch (error) {
+      console.error("FIPE lookup error:", error);
+      return {
+        success: false,
+        error: {
+          code: "API_ERROR",
+          message: "Erro ao consultar veiculo. Tente novamente.",
+        },
+      };
+    }
+
+    // Use WDAPI2 data for marca/modelo (more reliable than PowerCRM)
+    const marca = fipeResult.marca || extractBrandFromPowerCrm(powerCrmData.brand);
+    const modelo = fipeResult.modelo || extractModelFromPowerCrm(powerCrmData.brand);
+
+    // 3. Check blacklist
+    const blacklistResult = await isBlacklisted(marca, modelo);
 
     if (blacklistResult.blacklisted) {
       return {
@@ -297,26 +354,12 @@ export async function lookupVehicle(
           code: "BLACKLISTED",
           message: blacklistResult.motivo || "Nao trabalhamos com este veiculo",
           details: {
-            marca: powerCrmData.brand,
-            modelo: powerCrmData.model,
+            marca,
+            modelo,
             motivo: blacklistResult.motivo,
           },
         },
         saveAsLead: true,
-      };
-    }
-
-    // 3. Get FIPE value
-    let fipeResult;
-    try {
-      fipeResult = await getFipeValue(powerCrmData.codFipe, normalizedPlaca);
-    } catch {
-      return {
-        success: false,
-        error: {
-          code: "API_ERROR",
-          message: "Erro ao consultar veiculo. Tente novamente.",
-        },
       };
     }
 
@@ -371,8 +414,8 @@ export async function lookupVehicle(
       success: true,
       data: {
         placa: normalizedPlaca,
-        marca: powerCrmData.brand,
-        modelo: fipeResult.modelo || powerCrmData.model,
+        marca,
+        modelo,
         ano: powerCrmData.year,
         valorFipe: fipeResult.valorFipe,
         codigoFipe: fipeResult.codigoFipe,
