@@ -24,7 +24,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { Filter, X, CalendarIcon } from "lucide-react";
+import { X, CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -254,11 +254,6 @@ export function CotacoesFilters({
     <div className="space-y-3">
       {/* Filter Controls */}
       <div className="flex flex-wrap items-center gap-2">
-        <div className="flex items-center gap-1 text-sm text-muted-foreground">
-          <Filter className="h-4 w-4" />
-          <span>Filtros:</span>
-        </div>
-
         {/* Category Filter */}
         <Select
           value={filters.category || "all"}

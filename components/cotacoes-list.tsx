@@ -23,7 +23,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Filter, Loader2 } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { listQuotationsAction } from "@/app/(admin)/cotacoes/actions";
 import type { QuotationWithRelations } from "@/lib/quotations";
 import type { StatusCount, QuotationFilters, QuotationStatus, VehicleCategory, DatePeriod } from "@/lib/types/quotations";
@@ -350,56 +351,81 @@ export function CotacoesList({ initialData }: CotacoesListProps) {
   // Loading skeleton
   if (isLoading && quotations.length === 0) {
     return (
-      <div className="space-y-4">
-        {/* Status tabs skeleton */}
-        <div className="flex gap-2 overflow-x-auto">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton key={i} className="h-9 w-24 shrink-0" />
-          ))}
-        </div>
+      <div className="space-y-6">
+        {/* Filters Card Skeleton */}
+        <Card>
+          <CardHeader className="pb-4">
+            <div className="flex items-center gap-2">
+              <Skeleton className="h-5 w-5" />
+              <Skeleton className="h-5 w-16" />
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Status tabs skeleton */}
+            <div className="flex gap-2 overflow-x-auto">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Skeleton key={i} className="h-9 w-24 shrink-0 rounded-full" />
+              ))}
+            </div>
 
-        {/* Search skeleton */}
-        <Skeleton className="h-10 w-full" />
+            {/* Search skeleton */}
+            <Skeleton className="h-10 w-full" />
 
-        {/* Filters skeleton */}
-        <div className="flex flex-wrap gap-2">
-          <Skeleton className="h-9 w-32" />
-          <Skeleton className="h-9 w-36" />
-          <Skeleton className="h-9 w-40" />
-        </div>
+            {/* Filters skeleton */}
+            <div className="flex flex-wrap gap-2">
+              <Skeleton className="h-9 w-32" />
+              <Skeleton className="h-9 w-36" />
+              <Skeleton className="h-9 w-40" />
+            </div>
+          </CardContent>
+        </Card>
 
-        {/* Count and items per page skeleton */}
-        <div className="flex items-center justify-between">
-          <Skeleton className="h-5 w-[150px]" />
-          <Skeleton className="h-9 w-[100px]" />
-        </div>
+        {/* Results Card Skeleton */}
+        <Card>
+          <CardContent className="pt-6">
+            {/* Count and items per page skeleton */}
+            <div className="flex items-center justify-between mb-4">
+              <Skeleton className="h-5 w-[150px]" />
+              <Skeleton className="h-9 w-[100px]" />
+            </div>
 
-        {/* Mobile: Card skeletons */}
-        <div className="lg:hidden space-y-3">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="border rounded-lg p-4 space-y-3">
-              <div className="flex justify-between">
-                <Skeleton className="h-6 w-20" />
-                <Skeleton className="h-4 w-16" />
+            {/* Mobile: Card skeletons */}
+            <div className="lg:hidden space-y-3">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="border rounded-lg p-4 space-y-3">
+                  <div className="flex justify-between">
+                    <Skeleton className="h-6 w-20" />
+                    <Skeleton className="h-4 w-16" />
+                  </div>
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-4 w-1/2" />
+                  <div className="flex gap-2 pt-2">
+                    <Skeleton className="h-9 flex-1" />
+                    <Skeleton className="h-9 flex-1" />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop: Table skeleton */}
+            <div className="hidden lg:block border rounded-lg overflow-hidden">
+              <div className="bg-muted/50 p-3">
+                <div className="flex gap-4">
+                  {Array.from({ length: 7 }).map((_, i) => (
+                    <Skeleton key={i} className="h-4 flex-1" />
+                  ))}
+                </div>
               </div>
-              <Skeleton className="h-4 w-3/4" />
-              <Skeleton className="h-4 w-1/2" />
-              <div className="flex gap-2 pt-2">
-                <Skeleton className="h-9 flex-1" />
-                <Skeleton className="h-9 flex-1" />
+              <div className="divide-y">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="p-4">
+                    <Skeleton className="h-12 w-full" />
+                  </div>
+                ))}
               </div>
             </div>
-          ))}
-        </div>
-
-        {/* Desktop: Table skeleton */}
-        <div className="hidden lg:block border rounded-md">
-          <div className="space-y-2 p-4">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <Skeleton key={i} className="h-16 w-full" />
-            ))}
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -420,95 +446,111 @@ export function CotacoesList({ initialData }: CotacoesListProps) {
   }
 
   return (
-    <div className="space-y-4">
-      {/* Status Tabs Filter */}
-      <CotacoesStatusTabs
-        statusCounts={statusCounts}
-        currentStatus={currentStatus}
-        onStatusChange={handleStatusChange}
-        isLoading={isPending}
-      />
+    <div className="space-y-6">
+      {/* Filters Card */}
+      <Card>
+        <CardHeader className="pb-4">
+          <CardTitle className="flex items-center gap-2 text-lg font-semibold">
+            <Filter className="h-5 w-5" aria-hidden="true" />
+            Filtros
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Status Tabs Filter */}
+          <CotacoesStatusTabs
+            statusCounts={statusCounts}
+            currentStatus={currentStatus}
+            onStatusChange={handleStatusChange}
+            isLoading={isPending}
+          />
 
-      {/* Search */}
-      <CotacoesSearch
-        value={searchTerm}
-        onSearch={handleSearchChange}
-        isLoading={isPending}
-      />
+          {/* Search */}
+          <CotacoesSearch
+            value={searchTerm}
+            onSearch={handleSearchChange}
+            isLoading={isPending}
+          />
 
-      {/* Advanced Filters */}
-      <CotacoesFilters
-        filters={advancedFilters}
-        onFiltersChange={handleAdvancedFiltersChange}
-        onClearFilters={handleClearAdvancedFilters}
-        isLoading={isPending}
-      />
+          {/* Advanced Filters */}
+          <CotacoesFilters
+            filters={advancedFilters}
+            onFiltersChange={handleAdvancedFiltersChange}
+            onClearFilters={handleClearAdvancedFilters}
+            isLoading={isPending}
+          />
+        </CardContent>
+      </Card>
 
-      {/* Header with total count and items per page */}
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">
-          {total} cotacao{total !== 1 ? "es" : ""} encontrada{total !== 1 ? "s" : ""}
-        </p>
+      {/* Results Card */}
+      <Card>
+        <CardContent className="pt-6">
+          {/* Header with total count and items per page */}
+          <div className="flex items-center justify-between mb-4">
+            <p className="text-sm text-muted-foreground">
+              {total} cotacao{total !== 1 ? "es" : ""} encontrada{total !== 1 ? "s" : ""}
+            </p>
 
-        {/* Items per page selector */}
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">Exibir:</span>
-          <Select value={limit.toString()} onValueChange={handleLimitChange}>
-            <SelectTrigger className="w-[80px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {ITEMS_PER_PAGE_OPTIONS.map((option) => (
-                <SelectItem key={option} value={option.toString()}>
-                  {option}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      {/* Table */}
-      <div className="relative">
-        {isPending && (
-          <div className="absolute inset-0 bg-background/50 flex items-center justify-center z-10 rounded-lg">
-            <div className="flex items-center gap-2 bg-background px-4 py-2 rounded-full shadow-lg border">
-              <Loader2 className="h-5 w-5 animate-spin text-primary" aria-hidden="true" />
-              <span className="text-sm text-muted-foreground">Carregando...</span>
+            {/* Items per page selector */}
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Exibir:</span>
+              <Select value={limit.toString()} onValueChange={handleLimitChange}>
+                <SelectTrigger className="w-[80px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {ITEMS_PER_PAGE_OPTIONS.map((option) => (
+                    <SelectItem key={option} value={option.toString()}>
+                      {option}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
-        )}
-        <CotacoesTable quotations={quotations} isLoading={isLoading} />
-      </div>
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between pt-4 border-t">
-          <p className="text-sm text-muted-foreground">
-            Pagina {page} de {totalPages}
-          </p>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handlePageChange(page - 1)}
-              disabled={page === 1 || isPending}
-            >
-              <ChevronLeft className="h-4 w-4 mr-1" aria-hidden="true" />
-              Anterior
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handlePageChange(page + 1)}
-              disabled={page >= totalPages || isPending}
-            >
-              Proxima
-              <ChevronRight className="h-4 w-4 ml-1" aria-hidden="true" />
-            </Button>
+          {/* Table */}
+          <div className="relative">
+            {isPending && (
+              <div className="absolute inset-0 bg-background/50 flex items-center justify-center z-10 rounded-lg">
+                <div className="flex items-center gap-2 bg-background px-4 py-2 rounded-full shadow-lg border">
+                  <Loader2 className="h-5 w-5 animate-spin text-primary" aria-hidden="true" />
+                  <span className="text-sm text-muted-foreground">Carregando...</span>
+                </div>
+              </div>
+            )}
+            <CotacoesTable quotations={quotations} isLoading={isLoading} />
           </div>
-        </div>
-      )}
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between pt-4 mt-4 border-t">
+              <p className="text-sm text-muted-foreground">
+                Pagina {page} de {totalPages}
+              </p>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(page - 1)}
+                  disabled={page === 1 || isPending}
+                >
+                  <ChevronLeft className="h-4 w-4 mr-1" aria-hidden="true" />
+                  Anterior
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(page + 1)}
+                  disabled={page >= totalPages || isPending}
+                >
+                  Proxima
+                  <ChevronRight className="h-4 w-4 ml-1" aria-hidden="true" />
+                </Button>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
