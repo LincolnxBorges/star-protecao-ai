@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { getSession } from "@/lib/auth-server";
 import { getSellerByUserId } from "@/lib/sellers";
-import { getQuotationByIdWithAccessCheck } from "@/lib/quotations";
+import { getQuotationByIdWithAccessCheck, listQuotationActivities } from "@/lib/quotations";
 import { AdminQuotationDetails } from "@/components/admin-quotation-details";
 
 interface Props {
@@ -43,6 +43,9 @@ export default async function QuotationDetailsPage({ params }: Props) {
     if (!quotation) {
       notFound();
     }
+
+    // Fetch activities for history
+    const activities = await listQuotationActivities(id);
 
     // Transform the data for the component
     const quotationData = {
@@ -99,7 +102,7 @@ export default async function QuotationDetailsPage({ params }: Props) {
         : null,
     };
 
-    return <AdminQuotationDetails quotation={quotationData} />;
+    return <AdminQuotationDetails quotation={quotationData} activities={activities} />;
   } catch (error) {
     if (error instanceof Error && error.message === "FORBIDDEN") {
       notFound();

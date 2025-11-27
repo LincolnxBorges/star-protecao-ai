@@ -34,6 +34,16 @@ export const quotationStatusEnum = pgEnum("quotation_status", [
 
 export const sellerRoleEnum = pgEnum("seller_role", ["SELLER", "ADMIN"]);
 
+export const activityTypeEnum = pgEnum("activity_type", [
+  "CREATION",
+  "STATUS_CHANGE",
+  "WHATSAPP_SENT",
+  "NOTE",
+  "CALL",
+  "EMAIL",
+  "ASSIGNMENT",
+]);
+
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
@@ -205,5 +215,22 @@ export const sellerGoals = pgTable("seller_goals", {
   month: integer("month").notNull(),
   year: integer("year").notNull(),
   targetAccepted: integer("target_accepted").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+});
+
+// ===========================================
+// Quotation Activities Table
+// ===========================================
+
+export const quotationActivities = pgTable("quotation_activities", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  quotationId: uuid("quotation_id")
+    .notNull()
+    .references(() => quotations.id, { onDelete: "cascade" }),
+  type: activityTypeEnum("type").notNull(),
+  description: text("description").notNull(),
+  authorId: text("author_id").references(() => user.id),
+  authorName: varchar("author_name", { length: 255 }),
+  metadata: text("metadata"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
 });

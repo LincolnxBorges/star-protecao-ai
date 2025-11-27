@@ -227,6 +227,7 @@ A constituição é a fonte definitiva de verdade para decisões arquiteturais.
 - TypeScript 5.x com Next.js 15 (App Router) + Next.js, React, Drizzle ORM, Better Auth, Zod, react-hook-form, shadcn/ui, Tailwind CSS 4 (001-cotacao-veicular)
 - PostgreSQL via Drizzle ORM (schema em `lib/schema.ts`) (001-cotacao-veicular)
 - TypeScript 5.x com Next.js 15 (App Router) + React 19, Drizzle ORM, Better Auth, shadcn/ui (tema new-york), Tailwind CSS 4, lucide-reac (002-dashboard)
+- TypeScript 5.x com Next.js 15 (App Router) + React 19, Drizzle ORM, Better Auth, shadcn/ui, Tailwind CSS 4, Zod, react-hook-form, lucide-reac (003-cotacoes-gestao)
 
 ## Recent Changes
 - 001-cotacao-veicular: Added TypeScript 5.x com Next.js 15 (App Router) + Next.js, React, Drizzle ORM, Better Auth, Zod, react-hook-form, shadcn/ui, Tailwind CSS 4

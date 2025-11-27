@@ -4,8 +4,24 @@
  */
 
 import { db } from "@/lib/db";
-import { quotations, customers, vehicles, sellers } from "@/lib/schema";
-import { eq, and, desc, sql, lt } from "drizzle-orm";
+import {
+  quotations,
+  customers,
+  vehicles,
+  sellers,
+  quotationActivities,
+  user,
+} from "@/lib/schema";
+import { eq, and, desc, sql, lt, asc, gte, lte, ilike, or } from "drizzle-orm";
+import type {
+  QuotationStatus,
+  ActivityType,
+  QuotationActivity,
+  CreateActivityData,
+  StatusCount,
+  QuotationFilters,
+  VehicleCategory,
+} from "@/lib/types/quotations";
 
 // ===========================================
 // Types
@@ -264,6 +280,172 @@ export async function listQuotations(options?: {
 }
 
 // ===========================================
+// Advanced Quotation Listing with Filters
+// ===========================================
+
+export async function listQuotationsWithFilters(
+  filters: QuotationFilters
+): Promise<{ items: QuotationWithRelations[]; total: number }> {
+  const page = filters.page || 1;
+  const limit = filters.limit || 10;
+  const offset = (page - 1) * limit;
+
+  // Build where conditions
+  const conditions: ReturnType<typeof sql>[] = [];
+
+  // Filter by seller (for authorization)
+  if (filters.sellerId) {
+    conditions.push(eq(quotations.sellerId, filters.sellerId));
+  }
+
+  // Filter by status (multiple)
+  if (filters.status && filters.status.length > 0) {
+    conditions.push(
+      sql`${quotations.status} IN (${sql.join(
+        filters.status.map((s) => sql`${s}`),
+        sql`, `
+      )})`
+    );
+  }
+
+  // Filter by vehicle category (multiple)
+  if (filters.category && filters.category.length > 0) {
+    conditions.push(
+      sql`${vehicles.categoria} IN (${sql.join(
+        filters.category.map((c) => sql`${c}`),
+        sql`, `
+      )})`
+    );
+  }
+
+  // Filter by date range
+  if (filters.dateFrom) {
+    conditions.push(gte(quotations.createdAt, filters.dateFrom));
+  }
+  if (filters.dateTo) {
+    conditions.push(lte(quotations.createdAt, filters.dateTo));
+  }
+
+  // Filter by FIPE value range
+  if (filters.fipeMin !== undefined) {
+    conditions.push(
+      sql`CAST(${vehicles.valorFipe} AS DECIMAL) >= ${filters.fipeMin}`
+    );
+  }
+  if (filters.fipeMax !== undefined) {
+    conditions.push(
+      sql`CAST(${vehicles.valorFipe} AS DECIMAL) <= ${filters.fipeMax}`
+    );
+  }
+
+  // Search filter (ILIKE across multiple fields)
+  if (filters.search && filters.search.trim()) {
+    const searchTerm = `%${filters.search.trim()}%`;
+    conditions.push(
+      or(
+        ilike(customers.name, searchTerm),
+        ilike(customers.phone, searchTerm),
+        ilike(customers.cpf, searchTerm),
+        ilike(vehicles.placa, searchTerm),
+        ilike(vehicles.marca, searchTerm),
+        ilike(vehicles.modelo, searchTerm)
+      )!
+    );
+  }
+
+  // Combine all conditions
+  const whereClause =
+    conditions.length > 0 ? and(...conditions) : sql`1=1`;
+
+  // Count total for pagination
+  const [countResult] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(quotations)
+    .innerJoin(customers, eq(quotations.customerId, customers.id))
+    .innerJoin(vehicles, eq(quotations.vehicleId, vehicles.id))
+    .where(whereClause);
+
+  const total = countResult.count;
+
+  // Build order by
+  let orderColumn;
+  switch (filters.orderBy) {
+    case "mensalidade":
+      orderColumn = sql`CAST(${quotations.mensalidade} AS DECIMAL)`;
+      break;
+    case "valorFipe":
+      orderColumn = sql`CAST(${vehicles.valorFipe} AS DECIMAL)`;
+      break;
+    case "customerName":
+      orderColumn = customers.name;
+      break;
+    case "createdAt":
+    default:
+      orderColumn = quotations.createdAt;
+  }
+
+  const orderDirection = filters.orderDir === "asc" ? asc : desc;
+
+  // Query with joins
+  const results = await db
+    .select({
+      quotation: quotations,
+      customer: customers,
+      vehicle: vehicles,
+      seller: sellers,
+    })
+    .from(quotations)
+    .innerJoin(customers, eq(quotations.customerId, customers.id))
+    .innerJoin(vehicles, eq(quotations.vehicleId, vehicles.id))
+    .leftJoin(sellers, eq(quotations.sellerId, sellers.id))
+    .where(whereClause)
+    .orderBy(orderDirection(orderColumn))
+    .limit(limit)
+    .offset(offset);
+
+  const items = results.map(({ quotation, customer, vehicle, seller }) => ({
+    ...quotation,
+    customer: {
+      id: customer.id,
+      name: customer.name,
+      email: customer.email,
+      phone: customer.phone,
+      cpf: customer.cpf,
+      cep: customer.cep,
+      street: customer.street,
+      number: customer.number,
+      complement: customer.complement,
+      neighborhood: customer.neighborhood,
+      city: customer.city,
+      state: customer.state,
+    },
+    vehicle: {
+      id: vehicle.id,
+      placa: vehicle.placa,
+      marca: vehicle.marca,
+      modelo: vehicle.modelo,
+      ano: vehicle.ano,
+      valorFipe: vehicle.valorFipe,
+      codigoFipe: vehicle.codigoFipe,
+      combustivel: vehicle.combustivel,
+      cor: vehicle.cor,
+      categoria: vehicle.categoria,
+      tipoUso: vehicle.tipoUso,
+    },
+    seller: seller
+      ? {
+          id: seller.id,
+          name: seller.name,
+          email: seller.email,
+          phone: seller.phone,
+        }
+      : null,
+  }));
+
+  return { items, total };
+}
+
+// ===========================================
 // Authorization Helpers
 // ===========================================
 
@@ -310,16 +492,16 @@ export async function getQuotationByIdWithAccessCheck(
 // Quotation Updates
 // ===========================================
 
-type QuotationStatus = "CONTACTED" | "ACCEPTED" | "CANCELLED";
+type UpdateableStatus = "CONTACTED" | "ACCEPTED" | "CANCELLED";
 
-const VALID_TRANSITIONS: Record<string, QuotationStatus[]> = {
+const VALID_TRANSITIONS: Record<string, UpdateableStatus[]> = {
   PENDING: ["CONTACTED", "CANCELLED"],
   CONTACTED: ["ACCEPTED", "CANCELLED"],
 };
 
 export async function updateQuotationStatus(
   id: string,
-  status: QuotationStatus,
+  status: UpdateableStatus,
   notes?: string,
   sellerId?: string
 ): Promise<Quotation | null> {
@@ -382,4 +564,117 @@ export async function expireOldQuotations(): Promise<number> {
     );
 
   return result.rowCount || 0;
+}
+
+// ===========================================
+// Status Counts
+// ===========================================
+
+const ALL_STATUSES: QuotationStatus[] = [
+  "PENDING",
+  "CONTACTED",
+  "ACCEPTED",
+  "EXPIRED",
+  "CANCELLED",
+  "REJECTED",
+];
+
+export async function getStatusCounts(
+  sellerId?: string
+): Promise<StatusCount[]> {
+  let whereClause = sql`1=1`;
+
+  if (sellerId) {
+    whereClause = eq(quotations.sellerId, sellerId);
+  }
+
+  const results = await db
+    .select({
+      status: quotations.status,
+      count: sql<number>`count(*)::int`,
+    })
+    .from(quotations)
+    .where(whereClause)
+    .groupBy(quotations.status);
+
+  // Create a map for quick lookup
+  const countMap = new Map(
+    results.map((r) => [r.status, r.count])
+  );
+
+  // Return all statuses with count (0 if not found)
+  return ALL_STATUSES.map((status) => ({
+    status,
+    count: countMap.get(status) || 0,
+  }));
+}
+
+// ===========================================
+// Quotation Activities
+// ===========================================
+
+export async function createQuotationActivity(
+  data: CreateActivityData
+): Promise<QuotationActivity> {
+  let authorName = data.authorName;
+
+  // If authorId provided but no authorName, fetch from user table
+  if (data.authorId && !authorName) {
+    const [foundUser] = await db
+      .select({ name: user.name })
+      .from(user)
+      .where(eq(user.id, data.authorId));
+
+    if (foundUser) {
+      authorName = foundUser.name;
+    }
+  }
+
+  const [activity] = await db
+    .insert(quotationActivities)
+    .values({
+      quotationId: data.quotationId,
+      type: data.type,
+      description: data.description,
+      authorId: data.authorId || null,
+      authorName: authorName || null,
+      metadata: data.metadata ? JSON.stringify(data.metadata) : null,
+    })
+    .returning();
+
+  return {
+    id: activity.id,
+    quotationId: activity.quotationId,
+    type: activity.type as ActivityType,
+    description: activity.description,
+    authorId: activity.authorId,
+    authorName: activity.authorName,
+    metadata: activity.metadata,
+    createdAt: activity.createdAt!,
+  };
+}
+
+export async function listQuotationActivities(
+  quotationId: string,
+  options?: { limit?: number }
+): Promise<QuotationActivity[]> {
+  const limit = options?.limit || 50;
+
+  const results = await db
+    .select()
+    .from(quotationActivities)
+    .where(eq(quotationActivities.quotationId, quotationId))
+    .orderBy(desc(quotationActivities.createdAt))
+    .limit(limit);
+
+  return results.map((activity) => ({
+    id: activity.id,
+    quotationId: activity.quotationId,
+    type: activity.type as ActivityType,
+    description: activity.description,
+    authorId: activity.authorId,
+    authorName: activity.authorName,
+    metadata: activity.metadata,
+    createdAt: activity.createdAt!,
+  }));
 }
