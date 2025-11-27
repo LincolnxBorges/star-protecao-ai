@@ -66,7 +66,7 @@ export function CotacaoResult({
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Car className="h-5 w-5" />
+            <Car className="h-5 w-5" aria-hidden="true" />
             Dados do Veiculo
           </CardTitle>
         </CardHeader>
@@ -117,7 +117,7 @@ export function CotacaoResult({
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Check className="h-5 w-5 text-green-500" />
+            <Check className="h-5 w-5 text-light-green-500 dark:text-light-green-400" aria-hidden="true" />
             Valores da Protecao
           </CardTitle>
         </CardHeader>
@@ -141,7 +141,7 @@ export function CotacaoResult({
             <span className="text-muted-foreground">
               Adesao com 20% de desconto
             </span>
-            <span className="font-semibold text-green-600">
+            <span className="font-semibold text-light-green-600 dark:text-light-green-400">
               {formatCurrency(vehicle.pricing.adesaoDesconto)}
             </span>
           </div>

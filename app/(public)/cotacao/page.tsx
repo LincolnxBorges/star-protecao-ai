@@ -6,6 +6,7 @@ import { CotacaoFormVehicle } from "@/components/cotacao-form-vehicle";
 import { CotacaoResult } from "@/components/cotacao-result";
 import { CotacaoRejected } from "@/components/cotacao-rejected";
 import { CotacaoFormCustomer } from "@/components/cotacao-form-customer";
+import { WizardSteps, WizardStep } from "@/components/wizard-step";
 
 type Step = "vehicle" | "result" | "rejected" | "customer";
 
@@ -137,48 +138,91 @@ export default function CotacaoPage() {
     }
   }
 
+  function getStepStatus(targetStep: Step): "idle" | "active" | "completed" {
+    const stepOrder: Step[] = ["vehicle", "result", "customer"];
+    const currentIndex = stepOrder.indexOf(step === "rejected" ? "result" : step);
+    const targetIndex = stepOrder.indexOf(targetStep);
+
+    if (targetIndex < currentIndex) return "completed";
+    if (targetIndex === currentIndex) return "active";
+    return "idle";
+  }
+
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
-      <div className="mb-8 text-center">
-        <h1 className="text-3xl font-bold text-primary mb-2">
-          Cotacao de Protecao Veicular
-        </h1>
-        <p className="text-muted-foreground">
-          Informe os dados do seu veiculo para receber uma cotacao
-        </p>
+    <div className="min-h-screen bg-background flex flex-col items-center p-4 py-8">
+      <div className="w-full max-w-2xl">
+        {/* Header */}
+        <div className="mb-8 text-center">
+          <h1 className="text-dashboard-h1 font-bold text-foreground mb-2">
+            Cotacao de Protecao Veicular
+          </h1>
+          <p className="text-body-small text-muted-foreground">
+            Informe os dados do seu veiculo para receber uma cotacao
+          </p>
+        </div>
+
+        {/* Wizard Steps - only show for normal flow */}
+        {step !== "rejected" && (
+          <div className="mb-8">
+            <WizardSteps orientation="horizontal" className="max-w-lg mx-auto">
+              <WizardStep
+                step={1}
+                title="Veiculo"
+                description="Dados do veiculo"
+                status={getStepStatus("vehicle")}
+              />
+              <WizardStep
+                step={2}
+                title="Cotacao"
+                description="Valores calculados"
+                status={getStepStatus("result")}
+              />
+              <WizardStep
+                step={3}
+                title="Dados Pessoais"
+                description="Finalize sua cotacao"
+                status={getStepStatus("customer")}
+                isLast
+              />
+            </WizardSteps>
+          </div>
+        )}
+
+        {/* Content */}
+        <div className="flex justify-center">
+          {step === "vehicle" && (
+            <CotacaoFormVehicle
+              onSuccess={handleVehicleSuccess}
+              onRejected={handleVehicleRejected}
+            />
+          )}
+
+          {step === "result" && vehicleData && (
+            <CotacaoResult
+              vehicle={vehicleData}
+              onContinue={handleContinueToCustomer}
+              onBack={handleBack}
+            />
+          )}
+
+          {step === "rejected" && rejectionError && (
+            <CotacaoRejected
+              error={rejectionError}
+              saveAsLead={saveAsLead}
+              onCollectData={handleCollectLeadData}
+              onBack={handleBack}
+            />
+          )}
+
+          {step === "customer" && (
+            <CotacaoFormCustomer
+              onSubmit={handleCustomerSubmit}
+              onBack={handleBackToResult}
+              isLoading={isSubmitting}
+            />
+          )}
+        </div>
       </div>
-
-      {step === "vehicle" && (
-        <CotacaoFormVehicle
-          onSuccess={handleVehicleSuccess}
-          onRejected={handleVehicleRejected}
-        />
-      )}
-
-      {step === "result" && vehicleData && (
-        <CotacaoResult
-          vehicle={vehicleData}
-          onContinue={handleContinueToCustomer}
-          onBack={handleBack}
-        />
-      )}
-
-      {step === "rejected" && rejectionError && (
-        <CotacaoRejected
-          error={rejectionError}
-          saveAsLead={saveAsLead}
-          onCollectData={handleCollectLeadData}
-          onBack={handleBack}
-        />
-      )}
-
-      {step === "customer" && (
-        <CotacaoFormCustomer
-          onSubmit={handleCustomerSubmit}
-          onBack={handleBackToResult}
-          isLoading={isSubmitting}
-        />
-      )}
     </div>
   );
 }

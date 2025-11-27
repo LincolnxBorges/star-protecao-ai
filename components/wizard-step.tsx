@@ -1,7 +1,11 @@
 import { Check, X, Circle, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { createContext, useContext } from "react";
 
 type StepStatus = "idle" | "active" | "completed" | "error" | "loading";
+type Orientation = "vertical" | "horizontal";
+
+const WizardContext = createContext<{ orientation: Orientation }>({ orientation: "vertical" });
 
 interface WizardStepProps {
   step: number;
@@ -16,6 +20,7 @@ interface WizardStepProps {
 interface WizardStepsProps {
   children: React.ReactNode;
   className?: string;
+  orientation?: Orientation;
 }
 
 const statusConfig: Record<StepStatus, {
@@ -94,7 +99,76 @@ export function WizardStep({
   className,
 }: WizardStepProps) {
   const config = statusConfig[status];
+  const { orientation } = useContext(WizardContext);
+  const isHorizontal = orientation === "horizontal";
 
+  if (isHorizontal) {
+    return (
+      <div className={cn("relative flex flex-1 flex-col items-center", className)}>
+        <div className="flex items-center w-full">
+          {/* Connector Line (before) */}
+          {step > 1 && (
+            <div
+              className={cn(
+                "h-0.5 flex-1",
+                status === "completed" || status === "active"
+                  ? "bg-light-green-500 dark:bg-light-green-400"
+                  : "bg-grey-200 dark:bg-grey-700"
+              )}
+              aria-hidden="true"
+            />
+          )}
+
+          {/* Step Indicator */}
+          <div
+            className={cn(
+              "flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 transition-colors",
+              config.bgColor,
+              config.borderColor
+            )}
+            aria-current={status === "active" ? "step" : undefined}
+          >
+            <StepIcon step={step} status={status} />
+          </div>
+
+          {/* Connector Line (after) */}
+          {!isLast && (
+            <div
+              className={cn(
+                "h-0.5 flex-1",
+                status === "completed"
+                  ? "bg-light-green-500 dark:bg-light-green-400"
+                  : "bg-grey-200 dark:bg-grey-700"
+              )}
+              aria-hidden="true"
+            />
+          )}
+        </div>
+
+        {/* Content */}
+        <div className="mt-2 text-center">
+          <h3
+            className={cn(
+              "text-sm font-semibold leading-tight",
+              status === "active" ? "text-foreground" : config.textColor
+            )}
+          >
+            {title}
+          </h3>
+          {description && (
+            <p className="mt-0.5 text-xs text-muted-foreground hidden sm:block">{description}</p>
+          )}
+        </div>
+
+        {/* Step Content (shown when active) - only for vertical */}
+        {children && status === "active" && (
+          <div className="mt-4 w-full">{children}</div>
+        )}
+      </div>
+    );
+  }
+
+  // Vertical layout (default)
   return (
     <div className={cn("relative flex gap-4", className)}>
       {/* Step Indicator */}
@@ -147,14 +221,20 @@ export function WizardStep({
   );
 }
 
-export function WizardSteps({ children, className }: WizardStepsProps) {
+export function WizardSteps({ children, className, orientation = "vertical" }: WizardStepsProps) {
   return (
-    <div
-      className={cn("flex flex-col", className)}
-      role="list"
-      aria-label="Etapas do processo"
-    >
-      {children}
-    </div>
+    <WizardContext.Provider value={{ orientation }}>
+      <div
+        className={cn(
+          "flex",
+          orientation === "horizontal" ? "flex-row" : "flex-col",
+          className
+        )}
+        role="list"
+        aria-label="Etapas do processo"
+      >
+        {children}
+      </div>
+    </WizardContext.Provider>
   );
 }

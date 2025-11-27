@@ -338,7 +338,7 @@ export function CotacaoFormCustomer({
               <Button type="submit" className="flex-1" disabled={isLoading}>
                 {isLoading ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
                     Finalizando...
                   </>
                 ) : (
