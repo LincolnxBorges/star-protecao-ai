@@ -76,7 +76,7 @@ interface Props {
 export function AdminQuotationDetails({ quotation, activities }: Props) {
   // Check if quotation is expired
   const isExpired = quotation.status === "EXPIRED" ||
-    (quotation.expiresAt && new Date(quotation.expiresAt) < new Date());
+    Boolean(quotation.expiresAt && new Date(quotation.expiresAt) < new Date());
 
   // Transform customer data for the detail component
   const clientData = {
