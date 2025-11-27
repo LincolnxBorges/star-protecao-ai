@@ -34,6 +34,19 @@ export const quotationStatusEnum = pgEnum("quotation_status", [
 
 export const sellerRoleEnum = pgEnum("seller_role", ["SELLER", "ADMIN"]);
 
+export const sellerStatusEnum = pgEnum("seller_status", [
+  "ACTIVE",
+  "INACTIVE",
+  "VACATION",
+]);
+
+export const roundRobinMethodEnum = pgEnum("round_robin_method", [
+  "SEQUENTIAL",
+  "LOAD_BALANCE",
+  "PERFORMANCE",
+  "SPEED",
+]);
+
 export const activityTypeEnum = pgEnum("activity_type", [
   "CREATION",
   "STATUS_CHANGE",
@@ -144,10 +157,17 @@ export const sellers = pgTable("sellers", {
   id: uuid("id").primaryKey().defaultRandom(),
   userId: text("user_id").references(() => user.id),
   name: varchar("name", { length: 255 }).notNull(),
-  email: varchar("email", { length: 255 }).notNull(),
+  email: varchar("email", { length: 255 }).notNull().unique(),
   phone: varchar("phone", { length: 20 }),
-  isActive: boolean("is_active").default(true),
+  cargo: varchar("cargo", { length: 100 }),
+  image: text("image"),
+  status: sellerStatusEnum("status").notNull().default("ACTIVE"),
   role: sellerRoleEnum("role").notNull().default("SELLER"),
+  deactivationReason: text("deactivation_reason"),
+  deactivatedAt: timestamp("deactivated_at", { withTimezone: true }),
+  roundRobinPosition: integer("round_robin_position"),
+  notifyEmail: boolean("notify_email").default(true).notNull(),
+  notifyWhatsapp: boolean("notify_whatsapp").default(true).notNull(),
   lastAssignmentAt: timestamp("last_assignment_at", { withTimezone: true }),
   assignmentCount: integer("assignment_count").default(0),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
@@ -199,7 +219,11 @@ export const blacklist = pgTable("blacklist", {
 
 export const roundRobinConfig = pgTable("round_robin_config", {
   id: uuid("id").primaryKey().defaultRandom(),
+  method: roundRobinMethodEnum("method").notNull().default("SEQUENTIAL"),
   currentIndex: integer("current_index").default(0),
+  pendingLeadLimit: integer("pending_lead_limit"),
+  skipOverloaded: boolean("skip_overloaded").default(true).notNull(),
+  notifyWhenAllOverloaded: boolean("notify_when_all_overloaded").default(true).notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
 

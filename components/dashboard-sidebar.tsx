@@ -19,7 +19,7 @@ import { useRouter } from "next/navigation";
 const NAVIGATION_ITEMS = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
   { href: "/cotacoes", icon: FileText, label: "Cotações" },
-  { href: "/clientes", icon: Users, label: "Clientes" },
+  { href: "/vendedores", icon: Users, label: "Vendedores" },
   { href: "/configuracoes", icon: Settings, label: "Configurações" },
 ];
 
