@@ -52,7 +52,7 @@ async function seedDashboard() {
         email: "vendedor@star.com",
         phone: "(11) 99999-9999",
         role: "SELLER",
-        isActive: true,
+        status: "ACTIVE",
       })
       .returning();
     sellerId = newSeller.id;
