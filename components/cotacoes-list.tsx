@@ -471,8 +471,11 @@ export function CotacoesList({ initialData }: CotacoesListProps) {
       {/* Table */}
       <div className="relative">
         {isPending && (
-          <div className="absolute inset-0 bg-background/50 flex items-center justify-center z-10">
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          <div className="absolute inset-0 bg-background/50 flex items-center justify-center z-10 rounded-lg">
+            <div className="flex items-center gap-2 bg-background px-4 py-2 rounded-full shadow-lg border">
+              <Loader2 className="h-5 w-5 animate-spin text-primary" aria-hidden="true" />
+              <span className="text-sm text-muted-foreground">Carregando...</span>
+            </div>
           </div>
         )}
         <CotacoesTable quotations={quotations} isLoading={isLoading} />
@@ -480,7 +483,7 @@ export function CotacoesList({ initialData }: CotacoesListProps) {
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between pt-4 border-t">
           <p className="text-sm text-muted-foreground">
             Pagina {page} de {totalPages}
           </p>
@@ -491,7 +494,7 @@ export function CotacoesList({ initialData }: CotacoesListProps) {
               onClick={() => handlePageChange(page - 1)}
               disabled={page === 1 || isPending}
             >
-              <ChevronLeft className="h-4 w-4 mr-1" />
+              <ChevronLeft className="h-4 w-4 mr-1" aria-hidden="true" />
               Anterior
             </Button>
             <Button
@@ -501,7 +504,7 @@ export function CotacoesList({ initialData }: CotacoesListProps) {
               disabled={page >= totalPages || isPending}
             >
               Proxima
-              <ChevronRight className="h-4 w-4 ml-1" />
+              <ChevronRight className="h-4 w-4 ml-1" aria-hidden="true" />
             </Button>
           </div>
         </div>

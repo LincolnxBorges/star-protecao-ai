@@ -32,11 +32,11 @@ interface CotacoesRowProps {
 
 const STATUS_CONFIG: Record<
   string,
-  { label: string; variant: "default" | "secondary" | "destructive" | "outline" }
+  { label: string; variant: "default" | "secondary" | "destructive" | "outline" | "success" | "warning" | "info" }
 > = {
-  PENDING: { label: "Pendente", variant: "default" },
-  CONTACTED: { label: "Contatado", variant: "secondary" },
-  ACCEPTED: { label: "Aceita", variant: "default" },
+  PENDING: { label: "Pendente", variant: "warning" },
+  CONTACTED: { label: "Contatado", variant: "info" },
+  ACCEPTED: { label: "Aceita", variant: "success" },
   CANCELLED: { label: "Cancelada", variant: "destructive" },
   EXPIRED: { label: "Expirada", variant: "outline" },
   REJECTED: { label: "Recusada", variant: "destructive" },
@@ -175,13 +175,14 @@ export function CotacoesRow({ quotation }: CotacoesRowProps) {
       {/* Tempo desde criacao */}
       <TableCell>
         <div className="flex items-center gap-1 text-sm text-muted-foreground">
-          <Clock className="h-3 w-3" />
+          <Clock className="h-3 w-3" aria-hidden="true" />
           <span>{formatTimeAgo(quotation.createdAt)}</span>
           {expiringToday && quotation.status === "PENDING" && (
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger>
-                  <AlertTriangle className="h-4 w-4 text-destructive" />
+                  <AlertTriangle className="h-4 w-4 text-destructive" aria-hidden="true" />
+                  <span className="sr-only">Expira hoje</span>
                 </TooltipTrigger>
                 <TooltipContent>
                   <p>Expira hoje!</p>
@@ -213,7 +214,7 @@ export function CotacoesRow({ quotation }: CotacoesRowProps) {
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    <MessageCircle className="h-4 w-4 text-green-600" />
+                    <MessageCircle className="h-4 w-4 text-light-green-600 dark:text-light-green-400" />
                     <span className="sr-only">WhatsApp</span>
                   </a>
                 </Button>

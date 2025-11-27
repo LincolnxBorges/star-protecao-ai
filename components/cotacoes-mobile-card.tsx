@@ -26,11 +26,11 @@ interface CotacoesMobileCardProps {
 
 const STATUS_CONFIG: Record<
   string,
-  { label: string; variant: "default" | "secondary" | "destructive" | "outline" }
+  { label: string; variant: "default" | "secondary" | "destructive" | "outline" | "success" | "warning" | "info" }
 > = {
-  PENDING: { label: "Pendente", variant: "default" },
-  CONTACTED: { label: "Contatado", variant: "secondary" },
-  ACCEPTED: { label: "Aceita", variant: "default" },
+  PENDING: { label: "Pendente", variant: "warning" },
+  CONTACTED: { label: "Contatado", variant: "info" },
+  ACCEPTED: { label: "Aceita", variant: "success" },
   CANCELLED: { label: "Cancelada", variant: "destructive" },
   EXPIRED: { label: "Expirada", variant: "outline" },
   REJECTED: { label: "Recusada", variant: "destructive" },
@@ -130,17 +130,20 @@ export function CotacoesMobileCard({ quotation }: CotacoesMobileCardProps) {
             )}
           </div>
           <div className="flex items-center gap-1 text-sm text-muted-foreground">
-            <Clock className="h-3 w-3" />
+            <Clock className="h-3 w-3" aria-hidden="true" />
             <span>{formatTimeAgo(quotation.createdAt)}</span>
             {expiringToday && quotation.status === "PENDING" && (
-              <AlertTriangle className="h-4 w-4 text-destructive ml-1" />
+              <>
+                <AlertTriangle className="h-4 w-4 text-destructive ml-1" aria-hidden="true" />
+                <span className="sr-only">Expira hoje</span>
+              </>
             )}
           </div>
         </div>
 
         {/* Vehicle Info */}
         <div className="flex items-start gap-2 mb-3">
-          <Car className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
+          <Car className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" aria-hidden="true" />
           <div className="flex-1 min-w-0">
             <p className="font-medium truncate">
               {quotation.vehicle.marca} {quotation.vehicle.modelo}
@@ -158,7 +161,7 @@ export function CotacoesMobileCard({ quotation }: CotacoesMobileCardProps) {
 
         {/* Customer Info */}
         <div className="flex items-start gap-2 mb-3">
-          <User className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
+          <User className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" aria-hidden="true" />
           <div className="flex-1 min-w-0">
             <p className="font-medium truncate">{quotation.customer.name}</p>
             <p className="text-sm text-muted-foreground">
@@ -191,7 +194,7 @@ export function CotacoesMobileCard({ quotation }: CotacoesMobileCardProps) {
           <Button
             variant="default"
             size="sm"
-            className="flex-1 bg-green-600 hover:bg-green-700"
+            className="flex-1 bg-light-green-600 hover:bg-light-green-700 dark:bg-light-green-500 dark:hover:bg-light-green-600 dark:text-white"
             asChild
           >
             <a
@@ -199,13 +202,13 @@ export function CotacoesMobileCard({ quotation }: CotacoesMobileCardProps) {
               target="_blank"
               rel="noopener noreferrer"
             >
-              <MessageCircle className="h-4 w-4 mr-2" />
+              <MessageCircle className="h-4 w-4 mr-2" aria-hidden="true" />
               WhatsApp
             </a>
           </Button>
           <Button variant="outline" size="sm" className="flex-1" asChild>
             <Link href={`/cotacoes/${quotation.id}`}>
-              <Eye className="h-4 w-4 mr-2" />
+              <Eye className="h-4 w-4 mr-2" aria-hidden="true" />
               Ver Detalhes
             </Link>
           </Button>
