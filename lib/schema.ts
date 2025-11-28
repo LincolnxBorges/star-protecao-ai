@@ -8,6 +8,7 @@ import {
   decimal,
   integer,
   pgEnum,
+  jsonb,
 } from "drizzle-orm/pg-core";
 
 // ===========================================
@@ -296,3 +297,59 @@ export const clientInteractions = pgTable("client_interactions", {
   scheduledFollowUp: timestamp("scheduled_follow_up", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
 });
+
+// ===========================================
+// Settings Tables (007-configuracoes-gerais)
+// ===========================================
+
+export const settings = pgTable("settings", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  category: varchar("category", { length: 50 }).notNull().unique(),
+  data: jsonb("data").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+});
+
+export type Settings = typeof settings.$inferSelect;
+export type NewSettings = typeof settings.$inferInsert;
+
+export const settingsAuditLog = pgTable("settings_audit_log", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id),
+  category: varchar("category", { length: 50 }).notNull(),
+  field: varchar("field", { length: 100 }).notNull(),
+  previousValue: text("previous_value"),
+  changedAt: timestamp("changed_at", { withTimezone: true }).defaultNow(),
+});
+
+export type SettingsAuditLog = typeof settingsAuditLog.$inferSelect;
+export type NewSettingsAuditLog = typeof settingsAuditLog.$inferInsert;
+
+export const messageTemplate = pgTable("message_template", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: varchar("name", { length: 100 }).notNull(),
+  eventType: varchar("event_type", { length: 50 }).notNull(),
+  content: text("content").notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+});
+
+export type MessageTemplate = typeof messageTemplate.$inferSelect;
+export type NewMessageTemplate = typeof messageTemplate.$inferInsert;
+
+export const messageQueue = pgTable("message_queue", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  type: varchar("type", { length: 50 }).notNull(),
+  payload: jsonb("payload").notNull(),
+  status: varchar("status", { length: 20 }).default("pending").notNull(),
+  attempts: integer("attempts").default(0).notNull(),
+  nextRetryAt: timestamp("next_retry_at", { withTimezone: true }),
+  lastError: text("last_error"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+});
+
+export type MessageQueue = typeof messageQueue.$inferSelect;
+export type NewMessageQueue = typeof messageQueue.$inferInsert;
