@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth-server";
-import { getSellerByUserId, getKpis, getGreeting, getUrgentAlerts, getRecentQuotations, getStatusDistribution, getRanking, getGoalProgress } from "@/lib/dashboard";
+import { getSellerByUserId, getKpis, getGreeting, getUrgentAlerts, getRecentQuotations, getStatusDistribution, getRanking, getGoalProgress, getQuotationEvolution } from "@/lib/dashboard";
 import { DashboardKpiCards } from "@/components/dashboard-kpi-cards";
 import { DashboardUrgentAlerts } from "@/components/dashboard-urgent-alerts";
 import { DashboardQuotationsList } from "@/components/dashboard-quotations-list";
@@ -10,6 +10,7 @@ import { DashboardGoalProgress } from "@/components/dashboard-goal-progress";
 import { DashboardGreeting } from "@/components/dashboard-greeting";
 import { DashboardPeriodFilter } from "@/components/dashboard-period-filter";
 import { DashboardPollingWrapper } from "@/components/dashboard-polling-wrapper";
+import { DashboardQuotationChart } from "@/components/dashboard-quotation-chart";
 import type { PeriodFilter } from "@/lib/types/dashboard";
 
 interface DashboardPageProps {
@@ -33,13 +34,14 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const period = (params.period as PeriodFilter) || "today";
   const greeting = getGreeting();
 
-  const [kpis, urgentAlerts, recentQuotations, statusDistribution, ranking, goalProgress] = await Promise.all([
+  const [kpis, urgentAlerts, recentQuotations, statusDistribution, ranking, goalProgress, quotationEvolution] = await Promise.all([
     getKpis(seller.id, period),
     getUrgentAlerts(seller.id),
     getRecentQuotations(seller.id),
     getStatusDistribution(seller.id, period),
     getRanking(seller.id),
     getGoalProgress(seller.id),
+    getQuotationEvolution(seller.id, period),
   ]);
 
   return (
@@ -56,6 +58,9 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
 
         {/* KPI Cards */}
         <DashboardKpiCards data={kpis} />
+
+        {/* Quotation Evolution Chart */}
+        <DashboardQuotationChart data={quotationEvolution} />
 
         {/* Recent Quotations */}
         <DashboardQuotationsList quotations={recentQuotations} />

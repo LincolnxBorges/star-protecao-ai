@@ -26,6 +26,8 @@ import type {
   RankingData,
   RankingItem,
   GoalData,
+  QuotationEvolutionData,
+  QuotationEvolutionPoint,
 } from "@/lib/types/dashboard";
 
 // ===========================================
@@ -642,5 +644,99 @@ export async function getGoalProgress(sellerId: string): Promise<GoalData> {
     percentage,
     remaining,
     conversionRate,
+  };
+}
+
+// ===========================================
+// Quotation Evolution Functions
+// ===========================================
+
+const MONTH_NAMES = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+
+export async function getQuotationEvolution(
+  sellerId: string,
+  _period: PeriodFilter
+): Promise<QuotationEvolutionData> {
+  const now = new Date();
+  const points: QuotationEvolutionPoint[] = [];
+
+  // Show last 6 months, comparing with the same 6 months from previous year
+  for (let i = 5; i >= 0; i--) {
+    const monthDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const monthStart = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1);
+    const monthEnd = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0, 23, 59, 59, 999);
+
+    // Previous year same month
+    const prevYearMonthStart = new Date(monthDate.getFullYear() - 1, monthDate.getMonth(), 1);
+    const prevYearMonthEnd = new Date(monthDate.getFullYear() - 1, monthDate.getMonth() + 1, 0, 23, 59, 59, 999);
+
+    const [currentTotal] = await db
+      .select({ count: count() })
+      .from(quotations)
+      .where(
+        and(
+          eq(quotations.sellerId, sellerId),
+          gte(quotations.createdAt, monthStart),
+          lte(quotations.createdAt, monthEnd)
+        )
+      );
+
+    const [currentAccepted] = await db
+      .select({ count: count() })
+      .from(quotations)
+      .where(
+        and(
+          eq(quotations.sellerId, sellerId),
+          eq(quotations.status, "ACCEPTED"),
+          gte(quotations.createdAt, monthStart),
+          lte(quotations.createdAt, monthEnd)
+        )
+      );
+
+    const [previousTotal] = await db
+      .select({ count: count() })
+      .from(quotations)
+      .where(
+        and(
+          eq(quotations.sellerId, sellerId),
+          gte(quotations.createdAt, prevYearMonthStart),
+          lte(quotations.createdAt, prevYearMonthEnd)
+        )
+      );
+
+    const [previousAccepted] = await db
+      .select({ count: count() })
+      .from(quotations)
+      .where(
+        and(
+          eq(quotations.sellerId, sellerId),
+          eq(quotations.status, "ACCEPTED"),
+          gte(quotations.createdAt, prevYearMonthStart),
+          lte(quotations.createdAt, prevYearMonthEnd)
+        )
+      );
+
+    points.push({
+      date: monthStart.toISOString(),
+      label: MONTH_NAMES[monthDate.getMonth()],
+      total: currentTotal?.count ?? 0,
+      accepted: currentAccepted?.count ?? 0,
+      previousTotal: previousTotal?.count ?? 0,
+      previousAccepted: previousAccepted?.count ?? 0,
+    });
+  }
+
+  // Calculate period labels
+  const startMonth = new Date(now.getFullYear(), now.getMonth() - 5, 1);
+  const currentYear = now.getFullYear();
+  const previousYear = currentYear - 1;
+
+  const periodLabel = `${MONTH_NAMES[startMonth.getMonth()]} - ${MONTH_NAMES[now.getMonth()]} ${currentYear}`;
+  const previousPeriodLabel = `${MONTH_NAMES[startMonth.getMonth()]} - ${MONTH_NAMES[now.getMonth()]} ${previousYear}`;
+
+  return {
+    points,
+    periodLabel,
+    previousPeriodLabel,
   };
 }
