@@ -1,6 +1,13 @@
 import { Suspense } from "react";
-import { Settings } from "lucide-react";
+import { redirect } from "next/navigation";
+import { headers } from "next/headers";
+import { Settings, Eye } from "lucide-react";
+import { auth } from "@/lib/auth";
+import { db } from "@/lib/db";
+import { sellers } from "@/lib/schema";
+import { eq } from "drizzle-orm";
 import { SettingsTabs } from "@/components/settings-tabs";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   getSettings,
   initializeDefaultSettings,
@@ -24,6 +31,27 @@ import {
 export const dynamic = "force-dynamic";
 
 async function SettingsContent() {
+  // Get session
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+
+  if (!session?.user) {
+    redirect("/login");
+  }
+
+  // Get seller info
+  const [seller] = await db
+    .select()
+    .from(sellers)
+    .where(eq(sellers.userId, session.user.id));
+
+  if (!seller) {
+    redirect("/login");
+  }
+
+  const isAdmin = seller.role === "ADMIN";
+
   // Initialize default settings and templates if not present
   await initializeDefaultSettings();
   await initializeDefaultTemplates();
@@ -44,13 +72,25 @@ async function SettingsContent() {
   ]);
 
   return (
-    <SettingsTabs
-      companySettings={companySettings}
-      quotationSettings={quotationSettings}
-      whatsappSettings={whatsappSettings}
-      notificationSettings={notificationSettings}
-      systemSettings={systemSettings}
-    />
+    <>
+      {!isAdmin && (
+        <Alert className="mb-6">
+          <Eye className="h-4 w-4" />
+          <AlertDescription>
+            Voce esta visualizando as configuracoes em modo somente leitura.
+            Apenas administradores podem editar.
+          </AlertDescription>
+        </Alert>
+      )}
+      <SettingsTabs
+        companySettings={companySettings}
+        quotationSettings={quotationSettings}
+        whatsappSettings={whatsappSettings}
+        notificationSettings={notificationSettings}
+        systemSettings={systemSettings}
+        readOnly={!isAdmin}
+      />
+    </>
   );
 }
 

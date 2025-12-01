@@ -35,11 +35,13 @@ import {
 interface SettingsCotacaoFormProps {
   initialData: QuotationSettings;
   onSave: (data: QuotationSettings) => Promise<void>;
+  readOnly?: boolean;
 }
 
 export function SettingsCotacaoForm({
   initialData,
   onSave,
+  readOnly = false,
 }: SettingsCotacaoFormProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -123,6 +125,7 @@ export function SettingsCotacaoForm({
                 min={1}
                 max={30}
                 {...register("diasValidade", { valueAsNumber: true })}
+                disabled={readOnly}
               />
               {errors.diasValidade && (
                 <p className="text-sm text-destructive">
@@ -159,6 +162,7 @@ export function SettingsCotacaoForm({
                 min={0}
                 max={10}
                 {...register("taxaAdesao", { valueAsNumber: true })}
+                disabled={readOnly}
               />
               {errors.taxaAdesao && (
                 <p className="text-sm text-destructive">
@@ -179,6 +183,7 @@ export function SettingsCotacaoForm({
                 min={0}
                 max={100}
                 {...register("desconto", { valueAsNumber: true })}
+                disabled={readOnly}
               />
               {errors.desconto && (
                 <p className="text-sm text-destructive">
@@ -246,6 +251,7 @@ export function SettingsCotacaoForm({
                   type="number"
                   className="pl-10"
                   {...register("cotasParticipacao.normal", { valueAsNumber: true })}
+                  disabled={readOnly}
                 />
               </div>
               {errors.cotasParticipacao?.normal && (
@@ -269,6 +275,7 @@ export function SettingsCotacaoForm({
                   type="number"
                   className="pl-10"
                   {...register("cotasParticipacao.especial", { valueAsNumber: true })}
+                  disabled={readOnly}
                 />
               </div>
               {errors.cotasParticipacao?.especial && (
@@ -292,6 +299,7 @@ export function SettingsCotacaoForm({
                   type="number"
                   className="pl-10"
                   {...register("cotasParticipacao.utilitario", { valueAsNumber: true })}
+                  disabled={readOnly}
                 />
               </div>
               {errors.cotasParticipacao?.utilitario && (
@@ -315,6 +323,7 @@ export function SettingsCotacaoForm({
                   type="number"
                   className="pl-10"
                   {...register("cotasParticipacao.moto", { valueAsNumber: true })}
+                  disabled={readOnly}
                 />
               </div>
               {errors.cotasParticipacao?.moto && (
@@ -352,6 +361,7 @@ export function SettingsCotacaoForm({
               onCheckedChange={(checked) =>
                 setValue("alertaExpiracao.habilitado", checked, { shouldDirty: true })
               }
+              disabled={readOnly}
             />
           </div>
 
@@ -365,6 +375,7 @@ export function SettingsCotacaoForm({
                 max={30}
                 className="max-w-[200px]"
                 {...register("alertaExpiracao.diasAntecedencia", { valueAsNumber: true })}
+                disabled={readOnly}
               />
               {errors.alertaExpiracao?.diasAntecedencia && (
                 <p className="text-sm text-destructive">
@@ -404,6 +415,7 @@ export function SettingsCotacaoForm({
               onCheckedChange={(checked) =>
                 setValue("permitirReativar.habilitado", checked, { shouldDirty: true })
               }
+              disabled={readOnly}
             />
           </div>
 
@@ -417,6 +429,7 @@ export function SettingsCotacaoForm({
                 max={90}
                 className="max-w-[200px]"
                 {...register("permitirReativar.diasMaximo", { valueAsNumber: true })}
+                disabled={readOnly}
               />
               {errors.permitirReativar?.diasMaximo && (
                 <p className="text-sm text-destructive">
@@ -463,26 +476,28 @@ export function SettingsCotacaoForm({
       </Card>
 
       {/* Submit Section */}
-      <div className="flex items-center justify-between">
-        <div>
-          {saveError && <p className="text-sm text-destructive">{saveError}</p>}
-          {saveSuccess && (
-            <p className="text-sm text-green-600">
-              Configuracoes salvas com sucesso!
-            </p>
-          )}
+      {!readOnly && (
+        <div className="flex items-center justify-between">
+          <div>
+            {saveError && <p className="text-sm text-destructive">{saveError}</p>}
+            {saveSuccess && (
+              <p className="text-sm text-green-600">
+                Configuracoes salvas com sucesso!
+              </p>
+            )}
+          </div>
+          <Button type="submit" disabled={isSaving || !isDirty}>
+            {isSaving ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Salvando...
+              </>
+            ) : (
+              "Salvar Configuracoes"
+            )}
+          </Button>
         </div>
-        <Button type="submit" disabled={isSaving || !isDirty}>
-          {isSaving ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Salvando...
-            </>
-          ) : (
-            "Salvar Configuracoes"
-          )}
-        </Button>
-      </div>
+      )}
     </form>
   );
 }

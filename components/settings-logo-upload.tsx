@@ -9,12 +9,14 @@ interface SettingsLogoUploadProps {
   currentLogo?: string;
   onUploadSuccess: (path: string) => void;
   onRemove: () => void;
+  readOnly?: boolean;
 }
 
 export function SettingsLogoUpload({
   currentLogo,
   onUploadSuccess,
   onRemove,
+  readOnly = false,
 }: SettingsLogoUploadProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [isRemoving, setIsRemoving] = useState(false);
@@ -123,58 +125,60 @@ export function SettingsLogoUpload({
           </div>
         )}
 
-        <div className="flex flex-col gap-2">
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/jpeg,image/png,image/webp"
-            onChange={handleFileSelect}
-            className="hidden"
-            id="logo-upload"
-          />
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={isUploading || isRemoving}
-          >
-            {isUploading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Enviando...
-              </>
-            ) : (
-              <>
-                <Upload className="mr-2 h-4 w-4" />
-                {currentLogo ? "Alterar Logo" : "Enviar Logo"}
-              </>
-            )}
-          </Button>
-
-          {currentLogo && (
+        {!readOnly && (
+          <div className="flex flex-col gap-2">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              onChange={handleFileSelect}
+              className="hidden"
+              id="logo-upload"
+            />
             <Button
               type="button"
-              variant="ghost"
+              variant="outline"
               size="sm"
-              onClick={handleRemove}
+              onClick={() => fileInputRef.current?.click()}
               disabled={isUploading || isRemoving}
-              className="text-destructive hover:text-destructive"
             >
-              {isRemoving ? (
+              {isUploading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Removendo...
+                  Enviando...
                 </>
               ) : (
                 <>
-                  <X className="mr-2 h-4 w-4" />
-                  Remover Logo
+                  <Upload className="mr-2 h-4 w-4" />
+                  {currentLogo ? "Alterar Logo" : "Enviar Logo"}
                 </>
               )}
             </Button>
-          )}
-        </div>
+
+            {currentLogo && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={handleRemove}
+                disabled={isUploading || isRemoving}
+                className="text-destructive hover:text-destructive"
+              >
+                {isRemoving ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Removendo...
+                  </>
+                ) : (
+                  <>
+                    <X className="mr-2 h-4 w-4" />
+                    Remover Logo
+                  </>
+                )}
+              </Button>
+            )}
+          </div>
+        )}
       </div>
 
       <p className="text-xs text-muted-foreground">

@@ -70,7 +70,11 @@ const eventTypeLabels: Record<string, string> = {
   quotation_accepted: "Cotacao Aceita",
 };
 
-export function SettingsTemplateEditor() {
+interface SettingsTemplateEditorProps {
+  readOnly?: boolean;
+}
+
+export function SettingsTemplateEditor({ readOnly = false }: SettingsTemplateEditorProps) {
   const [templates, setTemplates] = useState<Template[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -329,10 +333,12 @@ export function SettingsTemplateEditor() {
                 Gerencie os templates de mensagens para WhatsApp
               </CardDescription>
             </div>
-            <Button onClick={openCreateDialog}>
-              <Plus className="mr-2 h-4 w-4" />
-              Novo Template
-            </Button>
+            {!readOnly && (
+              <Button onClick={openCreateDialog}>
+                <Plus className="mr-2 h-4 w-4" />
+                Novo Template
+              </Button>
+            )}
           </div>
         </CardHeader>
         <CardContent>
@@ -375,25 +381,27 @@ export function SettingsTemplateEditor() {
                       )}
                     </TableCell>
                     <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => openEditDialog(template)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setTemplateToDelete(template);
-                            setDeleteConfirmOpen(true);
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </div>
+                      {!readOnly && (
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => openEditDialog(template)}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setTemplateToDelete(template);
+                              setDeleteConfirmOpen(true);
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}

@@ -45,6 +45,7 @@ import { SettingsAuditViewer } from "@/components/settings-audit-viewer";
 interface SettingsSistemaFormProps {
   initialData: SystemSettings;
   onSave: (data: SystemSettings) => Promise<void>;
+  readOnly?: boolean;
 }
 
 type ApiConnectionStatus = "idle" | "testing" | "connected" | "error";
@@ -92,6 +93,7 @@ const logLevelOptions = [
 export function SettingsSistemaForm({
   initialData,
   onSave,
+  readOnly = false,
 }: SettingsSistemaFormProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -255,6 +257,7 @@ export function SettingsSistemaForm({
                 onValueChange={(value) =>
                   setValue("regional.fusoHorario", value, { shouldDirty: true })
                 }
+                disabled={readOnly}
               >
                 <SelectTrigger id="regional.fusoHorario">
                   <SelectValue placeholder="Selecione o fuso horario" />
@@ -276,6 +279,7 @@ export function SettingsSistemaForm({
                 onValueChange={(value: "DD/MM/YYYY" | "MM/DD/YYYY" | "YYYY-MM-DD") =>
                   setValue("regional.formatoData", value, { shouldDirty: true })
                 }
+                disabled={readOnly}
               >
                 <SelectTrigger id="regional.formatoData">
                   <SelectValue placeholder="Selecione o formato" />
@@ -297,6 +301,7 @@ export function SettingsSistemaForm({
                 onValueChange={(value: "BRL" | "USD" | "EUR") =>
                   setValue("regional.formatoMoeda", value, { shouldDirty: true })
                 }
+                disabled={readOnly}
               >
                 <SelectTrigger id="regional.formatoMoeda">
                   <SelectValue placeholder="Selecione a moeda" />
@@ -318,6 +323,7 @@ export function SettingsSistemaForm({
                 onValueChange={(value: "pt-BR" | "en-US" | "es-ES") =>
                   setValue("regional.idioma", value, { shouldDirty: true })
                 }
+                disabled={readOnly}
               >
                 <SelectTrigger id="regional.idioma">
                   <SelectValue placeholder="Selecione o idioma" />
@@ -357,6 +363,7 @@ export function SettingsSistemaForm({
                   id="apis.wdapi2.url"
                   {...register("apis.wdapi2.url")}
                   placeholder="https://api.wdapi2.com.br"
+                  disabled={readOnly}
                 />
               </div>
 
@@ -369,6 +376,7 @@ export function SettingsSistemaForm({
                     {...register("apis.wdapi2.apiKey")}
                     placeholder="Sua API Key"
                     className="pr-10"
+                    disabled={readOnly}
                   />
                   <Button
                     type="button"
@@ -376,6 +384,7 @@ export function SettingsSistemaForm({
                     size="sm"
                     className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
                     onClick={() => setShowWdapiKey(!showWdapiKey)}
+                    disabled={readOnly}
                   >
                     {showWdapiKey ? (
                       <EyeOff className="h-4 w-4 text-muted-foreground" />
@@ -396,7 +405,7 @@ export function SettingsSistemaForm({
                 variant="outline"
                 size="sm"
                 onClick={() => testApiConnection("wdapi2")}
-                disabled={!wdapiKey || apiTestResults.wdapi2.status === "testing"}
+                disabled={!wdapiKey || apiTestResults.wdapi2.status === "testing" || readOnly}
               >
                 {apiTestResults.wdapi2.status === "testing" ? (
                   <>
@@ -424,6 +433,7 @@ export function SettingsSistemaForm({
                 id="apis.fipe.url"
                 {...register("apis.fipe.url")}
                 placeholder="https://parallelum.com.br/fipe/api/v2"
+                disabled={readOnly}
               />
             </div>
             <div className="flex items-center justify-between">
@@ -433,7 +443,7 @@ export function SettingsSistemaForm({
                 variant="outline"
                 size="sm"
                 onClick={() => testApiConnection("fipe")}
-                disabled={apiTestResults.fipe.status === "testing"}
+                disabled={apiTestResults.fipe.status === "testing" || readOnly}
               >
                 {apiTestResults.fipe.status === "testing" ? (
                   <>
@@ -461,6 +471,7 @@ export function SettingsSistemaForm({
                 id="apis.viacep.url"
                 {...register("apis.viacep.url")}
                 placeholder="https://viacep.com.br/ws"
+                disabled={readOnly}
               />
             </div>
             <div className="flex items-center justify-between">
@@ -470,7 +481,7 @@ export function SettingsSistemaForm({
                 variant="outline"
                 size="sm"
                 onClick={() => testApiConnection("viacep")}
-                disabled={apiTestResults.viacep.status === "testing"}
+                disabled={apiTestResults.viacep.status === "testing" || readOnly}
               >
                 {apiTestResults.viacep.status === "testing" ? (
                   <>
@@ -518,6 +529,7 @@ export function SettingsSistemaForm({
                   shouldDirty: true,
                 })
               }
+              disabled={readOnly}
             />
           </div>
 
@@ -531,6 +543,7 @@ export function SettingsSistemaForm({
                 id="backup.horario"
                 type="time"
                 {...register("backup.horario")}
+                disabled={readOnly}
               />
               <p className="text-xs text-muted-foreground">
                 Horario em que o backup sera executado
@@ -545,6 +558,7 @@ export function SettingsSistemaForm({
                 {...register("backup.retencaoDias", { valueAsNumber: true })}
                 min={1}
                 max={365}
+                disabled={readOnly}
               />
               {errors.backup?.retencaoDias && (
                 <p className="text-sm text-destructive">
@@ -579,6 +593,7 @@ export function SettingsSistemaForm({
                 onValueChange={(value: "debug" | "info" | "warning" | "error") =>
                   setValue("logs.nivel", value, { shouldDirty: true })
                 }
+                disabled={readOnly}
               >
                 <SelectTrigger id="logs.nivel">
                   <SelectValue placeholder="Selecione o nivel" />
@@ -604,6 +619,7 @@ export function SettingsSistemaForm({
                 {...register("logs.retencaoDias", { valueAsNumber: true })}
                 min={1}
                 max={365}
+                disabled={readOnly}
               />
               {errors.logs?.retencaoDias && (
                 <p className="text-sm text-destructive">
@@ -619,26 +635,28 @@ export function SettingsSistemaForm({
       </Card>
 
       {/* Submit Section for Settings Form */}
-      <div className="flex items-center justify-between">
-        <div>
-          {saveError && <p className="text-sm text-destructive">{saveError}</p>}
-          {saveSuccess && (
-            <p className="text-sm text-green-600">
-              Configuracoes salvas com sucesso!
-            </p>
-          )}
+      {!readOnly && (
+        <div className="flex items-center justify-between">
+          <div>
+            {saveError && <p className="text-sm text-destructive">{saveError}</p>}
+            {saveSuccess && (
+              <p className="text-sm text-green-600">
+                Configuracoes salvas com sucesso!
+              </p>
+            )}
+          </div>
+          <Button type="submit" disabled={isSaving || !isDirty}>
+            {isSaving ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Salvando...
+              </>
+            ) : (
+              "Salvar Configuracoes"
+            )}
+          </Button>
         </div>
-        <Button type="submit" disabled={isSaving || !isDirty}>
-          {isSaving ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Salvando...
-            </>
-          ) : (
-            "Salvar Configuracoes"
-          )}
-        </Button>
-      </div>
+      )}
     </form>
 
     {/* Backup Manager (outside form) */}

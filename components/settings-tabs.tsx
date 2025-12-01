@@ -33,6 +33,7 @@ interface SettingsTabsProps {
   whatsappSettings: WhatsAppSettings;
   notificationSettings: NotificationSettings;
   systemSettings: SystemSettings;
+  readOnly?: boolean;
 }
 
 const tabsList: { value: TabValue; label: string; icon: React.ReactNode }[] = [
@@ -51,6 +52,7 @@ export function SettingsTabs({
   whatsappSettings,
   notificationSettings,
   systemSettings,
+  readOnly = false,
 }: SettingsTabsProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -114,6 +116,7 @@ export function SettingsTabs({
         <SettingsEmpresaForm
           initialData={companySettings}
           onSave={(data) => saveSettings("company", data)}
+          readOnly={readOnly}
         />
       </TabsContent>
 
@@ -121,6 +124,7 @@ export function SettingsTabs({
         <SettingsCotacaoForm
           initialData={quotationSettings}
           onSave={(data) => saveSettings("quotation", data)}
+          readOnly={readOnly}
         />
       </TabsContent>
 
@@ -129,8 +133,9 @@ export function SettingsTabs({
           <SettingsWhatsappForm
             initialData={whatsappSettings}
             onSave={(data) => saveSettings("whatsapp", data)}
+            readOnly={readOnly}
           />
-          <SettingsTemplateEditor />
+          <SettingsTemplateEditor readOnly={readOnly} />
         </div>
       </TabsContent>
 
@@ -138,6 +143,7 @@ export function SettingsTabs({
         <SettingsNotificacoesForm
           initialData={notificationSettings}
           onSave={(data) => saveSettings("notification", data)}
+          readOnly={readOnly}
         />
       </TabsContent>
 
@@ -145,6 +151,7 @@ export function SettingsTabs({
         <SettingsSistemaForm
           initialData={systemSettings}
           onSave={(data) => saveSettings("system", data)}
+          readOnly={readOnly}
         />
       </TabsContent>
     </Tabs>

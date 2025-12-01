@@ -29,11 +29,13 @@ import {
 interface SettingsEmpresaFormProps {
   initialData: CompanySettings;
   onSave: (data: CompanySettings) => Promise<void>;
+  readOnly?: boolean;
 }
 
 export function SettingsEmpresaForm({
   initialData,
   onSave,
+  readOnly = false,
 }: SettingsEmpresaFormProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [isSearchingCep, setIsSearchingCep] = useState(false);
@@ -165,6 +167,7 @@ export function SettingsEmpresaForm({
             currentLogo={logoValue}
             onUploadSuccess={handleLogoUpload}
             onRemove={handleLogoRemove}
+            readOnly={readOnly}
           />
         </CardContent>
       </Card>
@@ -187,6 +190,7 @@ export function SettingsEmpresaForm({
               id="nome"
               {...register("nome")}
               placeholder="Nome da empresa"
+              disabled={readOnly}
             />
             {errors.nome && (
               <p className="text-sm text-destructive">{errors.nome.message}</p>
@@ -199,6 +203,7 @@ export function SettingsEmpresaForm({
               id="nomeFantasia"
               {...register("nomeFantasia")}
               placeholder="Nome fantasia"
+              disabled={readOnly}
             />
           </div>
 
@@ -210,6 +215,7 @@ export function SettingsEmpresaForm({
               onChange={handleCNPJChange}
               placeholder="00.000.000/0000-00"
               maxLength={18}
+              disabled={readOnly}
             />
             {errors.cnpj && (
               <p className="text-sm text-destructive">{errors.cnpj.message}</p>
@@ -222,6 +228,7 @@ export function SettingsEmpresaForm({
               id="inscricaoEstadual"
               {...register("inscricaoEstadual")}
               placeholder="Inscricao estadual"
+              disabled={readOnly}
             />
           </div>
 
@@ -232,6 +239,7 @@ export function SettingsEmpresaForm({
               type="email"
               {...register("email")}
               placeholder="email@empresa.com.br"
+              disabled={readOnly}
             />
             {errors.email && (
               <p className="text-sm text-destructive">{errors.email.message}</p>
@@ -244,6 +252,7 @@ export function SettingsEmpresaForm({
               id="website"
               {...register("website")}
               placeholder="https://www.empresa.com.br"
+              disabled={readOnly}
             />
             {errors.website && (
               <p className="text-sm text-destructive">
@@ -274,6 +283,7 @@ export function SettingsEmpresaForm({
               onChange={handlePhoneChange("telefonePrincipal")}
               placeholder="(00) 00000-0000"
               maxLength={15}
+              disabled={readOnly}
             />
             {errors.telefonePrincipal && (
               <p className="text-sm text-destructive">
@@ -290,6 +300,7 @@ export function SettingsEmpresaForm({
               onChange={handlePhoneChange("telefoneSecundario")}
               placeholder="(00) 00000-0000"
               maxLength={15}
+              disabled={readOnly}
             />
           </div>
 
@@ -301,6 +312,7 @@ export function SettingsEmpresaForm({
               onChange={handlePhoneChange("whatsappComercial")}
               placeholder="(00) 00000-0000"
               maxLength={15}
+              disabled={readOnly}
             />
           </div>
         </CardContent>
@@ -327,13 +339,14 @@ export function SettingsEmpresaForm({
                 onChange={handleCEPChange}
                 placeholder="00000-000"
                 maxLength={9}
+                disabled={readOnly}
               />
               <Button
                 type="button"
                 variant="outline"
                 size="icon"
                 onClick={searchCEP}
-                disabled={isSearchingCep}
+                disabled={isSearchingCep || readOnly}
               >
                 {isSearchingCep ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -355,6 +368,7 @@ export function SettingsEmpresaForm({
               id="logradouro"
               {...register("endereco.logradouro")}
               placeholder="Rua, Avenida, etc."
+              disabled={readOnly}
             />
           </div>
 
@@ -364,6 +378,7 @@ export function SettingsEmpresaForm({
               id="numero"
               {...register("endereco.numero")}
               placeholder="123"
+              disabled={readOnly}
             />
           </div>
 
@@ -373,6 +388,7 @@ export function SettingsEmpresaForm({
               id="complemento"
               {...register("endereco.complemento")}
               placeholder="Sala, Andar, etc."
+              disabled={readOnly}
             />
           </div>
 
@@ -382,6 +398,7 @@ export function SettingsEmpresaForm({
               id="bairro"
               {...register("endereco.bairro")}
               placeholder="Bairro"
+              disabled={readOnly}
             />
           </div>
 
@@ -391,6 +408,7 @@ export function SettingsEmpresaForm({
               id="cidade"
               {...register("endereco.cidade")}
               placeholder="Cidade"
+              disabled={readOnly}
             />
           </div>
 
@@ -401,6 +419,7 @@ export function SettingsEmpresaForm({
               {...register("endereco.estado")}
               placeholder="UF"
               maxLength={2}
+              disabled={readOnly}
             />
             {errors.endereco?.estado && (
               <p className="text-sm text-destructive">
@@ -412,26 +431,28 @@ export function SettingsEmpresaForm({
       </Card>
 
       {/* Submit Section */}
-      <div className="flex items-center justify-between">
-        <div>
-          {saveError && <p className="text-sm text-destructive">{saveError}</p>}
-          {saveSuccess && (
-            <p className="text-sm text-green-600">
-              Configuracoes salvas com sucesso!
-            </p>
-          )}
+      {!readOnly && (
+        <div className="flex items-center justify-between">
+          <div>
+            {saveError && <p className="text-sm text-destructive">{saveError}</p>}
+            {saveSuccess && (
+              <p className="text-sm text-green-600">
+                Configuracoes salvas com sucesso!
+              </p>
+            )}
+          </div>
+          <Button type="submit" disabled={isSaving || !isDirty}>
+            {isSaving ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Salvando...
+              </>
+            ) : (
+              "Salvar Configuracoes"
+            )}
+          </Button>
         </div>
-        <Button type="submit" disabled={isSaving || !isDirty}>
-          {isSaving ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Salvando...
-            </>
-          ) : (
-            "Salvar Configuracoes"
-          )}
-        </Button>
-      </div>
+      )}
     </form>
   );
 }

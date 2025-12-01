@@ -44,6 +44,7 @@ import { smtpPresets, type SmtpPresetName } from "@/lib/integrations/smtp-preset
 interface SettingsNotificacoesFormProps {
   initialData: NotificationSettings;
   onSave: (data: NotificationSettings) => Promise<void>;
+  readOnly?: boolean;
 }
 
 type SmtpConnectionStatus = "idle" | "testing" | "connected" | "error";
@@ -83,6 +84,7 @@ const whatsappEventLabels = {
 export function SettingsNotificacoesForm({
   initialData,
   onSave,
+  readOnly = false,
 }: SettingsNotificacoesFormProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -232,7 +234,7 @@ export function SettingsNotificacoesForm({
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="smtpPreset">Provedor</Label>
-            <Select value={smtpPreset} onValueChange={handlePresetChange}>
+            <Select value={smtpPreset} onValueChange={handlePresetChange} disabled={readOnly}>
               <SelectTrigger id="smtpPreset">
                 <SelectValue placeholder="Selecione um provedor" />
               </SelectTrigger>
@@ -253,6 +255,7 @@ export function SettingsNotificacoesForm({
                 id="smtp.server"
                 {...register("smtp.server")}
                 placeholder="smtp.exemplo.com"
+                disabled={readOnly}
               />
               {errors.smtp?.server && (
                 <p className="text-sm text-destructive">
@@ -268,6 +271,7 @@ export function SettingsNotificacoesForm({
                 type="number"
                 {...register("smtp.port", { valueAsNumber: true })}
                 placeholder="587"
+                disabled={readOnly}
               />
               {errors.smtp?.port && (
                 <p className="text-sm text-destructive">
@@ -284,6 +288,7 @@ export function SettingsNotificacoesForm({
                 id="smtp.user"
                 {...register("smtp.user")}
                 placeholder="usuario@exemplo.com"
+                disabled={readOnly}
               />
               {errors.smtp?.user && (
                 <p className="text-sm text-destructive">
@@ -301,6 +306,7 @@ export function SettingsNotificacoesForm({
                   {...register("smtp.password")}
                   placeholder="Senha do email"
                   className="pr-10"
+                  disabled={readOnly}
                 />
                 <Button
                   type="button"
@@ -308,6 +314,7 @@ export function SettingsNotificacoesForm({
                   size="sm"
                   className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
                   onClick={() => setShowPassword(!showPassword)}
+                  disabled={readOnly}
                 >
                   {showPassword ? (
                     <EyeOff className="h-4 w-4 text-muted-foreground" />
@@ -335,6 +342,7 @@ export function SettingsNotificacoesForm({
                 onCheckedChange={(checked) =>
                   setValue("smtp.useTls", checked, { shouldDirty: true })
                 }
+                disabled={readOnly}
               />
               <Label htmlFor="smtp.useTls" className="cursor-pointer">
                 Usar TLS/SSL
@@ -350,7 +358,7 @@ export function SettingsNotificacoesForm({
               type="button"
               variant="outline"
               onClick={testSmtpConnection}
-              disabled={!canTestSmtp || smtpTestResult.status === "testing"}
+              disabled={!canTestSmtp || smtpTestResult.status === "testing" || readOnly}
             >
               {smtpTestResult.status === "testing" ? (
                 <>
@@ -399,6 +407,7 @@ export function SettingsNotificacoesForm({
                       { shouldDirty: true }
                     )
                   }
+                  disabled={readOnly}
                 />
               </div>
             ))}
@@ -444,6 +453,7 @@ export function SettingsNotificacoesForm({
                       { shouldDirty: true }
                     )
                   }
+                  disabled={readOnly}
                 />
               </div>
             ))}
@@ -474,6 +484,7 @@ export function SettingsNotificacoesForm({
                 onCheckedChange={(checked) =>
                   setValue("sistema.tempoReal", checked, { shouldDirty: true })
                 }
+                disabled={readOnly}
               />
             </div>
 
@@ -487,6 +498,7 @@ export function SettingsNotificacoesForm({
                 onCheckedChange={(checked) =>
                   setValue("sistema.tocarSom", checked, { shouldDirty: true })
                 }
+                disabled={readOnly}
               />
             </div>
 
@@ -500,6 +512,7 @@ export function SettingsNotificacoesForm({
                 onCheckedChange={(checked) =>
                   setValue("sistema.mostrarBadge", checked, { shouldDirty: true })
                 }
+                disabled={readOnly}
               />
             </div>
           </div>
@@ -517,6 +530,7 @@ export function SettingsNotificacoesForm({
               className="w-32"
               min={1}
               max={30}
+              disabled={readOnly}
             />
             {errors.sistema?.diasAutoLida && (
               <p className="text-sm text-destructive">
@@ -531,26 +545,28 @@ export function SettingsNotificacoesForm({
       </Card>
 
       {/* Submit Section */}
-      <div className="flex items-center justify-between">
-        <div>
-          {saveError && <p className="text-sm text-destructive">{saveError}</p>}
-          {saveSuccess && (
-            <p className="text-sm text-green-600">
-              Configuracoes salvas com sucesso!
-            </p>
-          )}
+      {!readOnly && (
+        <div className="flex items-center justify-between">
+          <div>
+            {saveError && <p className="text-sm text-destructive">{saveError}</p>}
+            {saveSuccess && (
+              <p className="text-sm text-green-600">
+                Configuracoes salvas com sucesso!
+              </p>
+            )}
+          </div>
+          <Button type="submit" disabled={isSaving || !isDirty}>
+            {isSaving ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Salvando...
+              </>
+            ) : (
+              "Salvar Configuracoes"
+            )}
+          </Button>
         </div>
-        <Button type="submit" disabled={isSaving || !isDirty}>
-          {isSaving ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Salvando...
-            </>
-          ) : (
-            "Salvar Configuracoes"
-          )}
-        </Button>
-      </div>
+      )}
     </form>
   );
 }

@@ -30,6 +30,7 @@ import {
 interface SettingsWhatsappFormProps {
   initialData: WhatsAppSettings;
   onSave: (data: WhatsAppSettings) => Promise<void>;
+  readOnly?: boolean;
 }
 
 type ConnectionStatus = "connected" | "disconnected" | "error" | "testing" | "unknown";
@@ -43,6 +44,7 @@ const providerOptions = [
 export function SettingsWhatsappForm({
   initialData,
   onSave,
+  readOnly = false,
 }: SettingsWhatsappFormProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
@@ -194,6 +196,7 @@ export function SettingsWhatsappForm({
                   shouldDirty: true,
                 })
               }
+              disabled={readOnly}
             >
               <SelectTrigger id="provider">
                 <SelectValue placeholder="Selecione o provedor" />
@@ -237,6 +240,7 @@ export function SettingsWhatsappForm({
               id="apiUrl"
               {...register("apiUrl")}
               placeholder={placeholders.apiUrl}
+              disabled={readOnly}
             />
             {errors.apiUrl && (
               <p className="text-sm text-destructive">{errors.apiUrl.message}</p>
@@ -255,6 +259,7 @@ export function SettingsWhatsappForm({
                 {...register("apiKey")}
                 placeholder={placeholders.apiKey}
                 className="pr-10"
+                disabled={readOnly}
               />
               <Button
                 type="button"
@@ -262,6 +267,7 @@ export function SettingsWhatsappForm({
                 size="sm"
                 className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
                 onClick={() => setShowApiKey(!showApiKey)}
+                disabled={readOnly}
               >
                 {showApiKey ? (
                   <EyeOff className="h-4 w-4 text-muted-foreground" />
@@ -284,6 +290,7 @@ export function SettingsWhatsappForm({
               id="instanceName"
               {...register("instanceName")}
               placeholder={placeholders.instanceName}
+              disabled={readOnly}
             />
             {errors.instanceName && (
               <p className="text-sm text-destructive">
@@ -316,7 +323,7 @@ export function SettingsWhatsappForm({
             type="button"
             variant="outline"
             onClick={testConnection}
-            disabled={isTesting || !apiUrl || !apiKey}
+            disabled={isTesting || !apiUrl || !apiKey || readOnly}
           >
             {isTesting ? (
               <>
@@ -334,26 +341,28 @@ export function SettingsWhatsappForm({
       </Card>
 
       {/* Submit Section */}
-      <div className="flex items-center justify-between">
-        <div>
-          {saveError && <p className="text-sm text-destructive">{saveError}</p>}
-          {saveSuccess && (
-            <p className="text-sm text-green-600">
-              Configuracoes salvas com sucesso!
-            </p>
-          )}
+      {!readOnly && (
+        <div className="flex items-center justify-between">
+          <div>
+            {saveError && <p className="text-sm text-destructive">{saveError}</p>}
+            {saveSuccess && (
+              <p className="text-sm text-green-600">
+                Configuracoes salvas com sucesso!
+              </p>
+            )}
+          </div>
+          <Button type="submit" disabled={isSaving || !isDirty}>
+            {isSaving ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Salvando...
+              </>
+            ) : (
+              "Salvar Configuracoes"
+            )}
+          </Button>
         </div>
-        <Button type="submit" disabled={isSaving || !isDirty}>
-          {isSaving ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Salvando...
-            </>
-          ) : (
-            "Salvar Configuracoes"
-          )}
-        </Button>
-      </div>
+      )}
     </form>
   );
 }

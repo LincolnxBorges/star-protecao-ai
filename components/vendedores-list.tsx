@@ -51,6 +51,7 @@ interface VendedoresListProps {
     statusCounts: StatusCounts;
     teamMetrics: TeamMetrics;
   };
+  isAdmin?: boolean;
 }
 
 const ITEMS_PER_PAGE_OPTIONS = [10, 25, 50];
@@ -68,7 +69,7 @@ const DEFAULT_TEAM_METRICS: TeamMetrics = {
 
 type StatusFilter = SellerStatus | "all";
 
-export function VendedoresList({ initialData }: VendedoresListProps) {
+export function VendedoresList({ initialData, isAdmin = false }: VendedoresListProps) {
   const [isPending, startTransition] = useTransition();
 
   // State - Lista
@@ -313,10 +314,12 @@ export function VendedoresList({ initialData }: VendedoresListProps) {
           title="Vendedores"
           description="Gerencie sua equipe de vendas"
           actions={
-            <Button onClick={handleOpenCreate}>
-              <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
-              Novo Vendedor
-            </Button>
+            isAdmin ? (
+              <Button onClick={handleOpenCreate}>
+                <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
+                Novo Vendedor
+              </Button>
+            ) : null
           }
         />
         <VendedoresKpiCards metrics={DEFAULT_TEAM_METRICS} />
@@ -353,10 +356,12 @@ export function VendedoresList({ initialData }: VendedoresListProps) {
         title="Vendedores"
         description="Gerencie sua equipe de vendas"
         actions={
-          <Button onClick={handleOpenCreate}>
-            <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
-            Novo Vendedor
-          </Button>
+          isAdmin ? (
+            <Button onClick={handleOpenCreate}>
+              <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
+              Novo Vendedor
+            </Button>
+          ) : null
         }
       />
 
