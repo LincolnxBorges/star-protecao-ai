@@ -1,15 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
+import { eq } from "drizzle-orm";
 import { createQuotationSchema } from "@/lib/validations/schemas";
 import { findOrCreateByCpf } from "@/lib/customers";
 import { createVehicle } from "@/lib/vehicles";
+import { db } from "@/lib/db";
+import { sellers } from "@/lib/schema";
 import {
   createQuotation,
   getQuotationById,
   listQuotations,
   expireOldQuotations,
 } from "@/lib/quotations";
-import { assignSellerToQuotation } from "@/lib/sellers";
-import { getSellerByUserId } from "@/lib/sellers";
+import { assignSellerToQuotation, getSellerByUserId } from "@/lib/sellers";
 import { notifyQuotationCreated } from "@/lib/notifications";
 import { getSession } from "@/lib/auth-server";
 
@@ -157,7 +159,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { vehicle, customer, isRejected, rejectionReason } = parseResult.data;
+    const { vehicle, customer, isRejected, rejectionReason, sellerId: manualSellerId } = parseResult.data;
 
     // 1. Find or create customer
     const customerRecord = await findOrCreateByCpf({
@@ -197,7 +199,7 @@ export async function POST(request: NextRequest) {
       ? null
       : (body.pricing?.cotaParticipacao ?? null);
 
-    // 4. Create quotation
+    // 4. Create quotation (with manual sellerId if provided)
     const quotation = await createQuotation({
       customerId: customerRecord.id,
       vehicleId: vehicleRecord.id,
@@ -205,14 +207,28 @@ export async function POST(request: NextRequest) {
       adesao,
       adesaoDesconto,
       cotaParticipacao,
+      sellerId: manualSellerId || null,
       isRejected,
       rejectionReason,
     });
 
-    // 5. Assign seller via round-robin (only for non-rejected quotations)
+    // 5. Assign seller via round-robin (only for non-rejected quotations without manual seller)
     let assignedSeller = null;
-    if (!isRejected) {
+    if (!isRejected && !manualSellerId) {
+      // Round-robin: atribui automaticamente quando nao ha sellerId manual
       assignedSeller = await assignSellerToQuotation(quotation.id);
+    } else if (!isRejected && manualSellerId) {
+      // Atribuicao manual: buscar dados do seller para notificacao
+      assignedSeller = await getSellerByUserId(manualSellerId).catch(() => null);
+      // Se nao encontrou por userId, buscar diretamente pelo sellerId
+      if (!assignedSeller) {
+        const sellerData = await db
+          .select()
+          .from(sellers)
+          .where(eq(sellers.id, manualSellerId))
+          .then(rows => rows[0] || null);
+        assignedSeller = sellerData;
+      }
     }
 
     // 6. Send notifications (async, don't block response)
