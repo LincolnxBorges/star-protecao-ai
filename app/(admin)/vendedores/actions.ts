@@ -177,7 +177,6 @@ export async function createSellerAction(
         email: data.email,
         password: data.password,
         name: data.name,
-        role: "user", // Better Auth role (different from seller role)
       },
     });
 
