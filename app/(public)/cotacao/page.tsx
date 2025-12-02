@@ -149,7 +149,7 @@ export default function CotacaoPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center p-4 py-8">
+    <div className="flex flex-col items-center p-4 py-8">
       <div className="w-full max-w-2xl">
         {/* Header */}
         <div className="mb-8 text-center">
