@@ -407,7 +407,8 @@ export async function lookupVehicle(
       ? parseFloat(pricingRule.cotaParticipacao)
       : null;
 
-    const pricing = calculateQuotationValues(mensalidade, cotaParticipacao);
+    // Calculate quotation values using settings from database
+    const pricing = await calculateQuotationValues(fipeResult.valorFipe, mensalidade, cotaParticipacao);
 
     // 7. Return success result
     return {

@@ -4,9 +4,10 @@
  */
 
 import { db } from "@/lib/db";
-import { pricingRules } from "@/lib/schema";
+import { pricingRules, settings } from "@/lib/schema";
 import { eq, and, lte, gte } from "drizzle-orm";
 import type { VehicleCategory } from "@/lib/vehicles";
+import type { QuotationSettings } from "@/lib/settings-schemas";
 
 // ===========================================
 // Types
@@ -56,15 +57,84 @@ export async function findPricingRule(
 }
 
 // ===========================================
+// Get Quotation Settings from Database
+// ===========================================
+
+// Default values if settings not found in database
+const DEFAULT_QUOTATION_SETTINGS = {
+  taxaAdesao: 2, // 2% do valor FIPE
+  desconto: 20, // 20% de desconto sobre a adesao
+};
+
+async function getQuotationSettings(): Promise<{ taxaAdesao: number; desconto: number }> {
+  try {
+    const result = await db
+      .select()
+      .from(settings)
+      .where(eq(settings.category, "quotation"))
+      .limit(1);
+
+    if (result.length > 0) {
+      const data = result[0].data as QuotationSettings;
+      return {
+        taxaAdesao: data.taxaAdesao ?? DEFAULT_QUOTATION_SETTINGS.taxaAdesao,
+        desconto: data.desconto ?? DEFAULT_QUOTATION_SETTINGS.desconto,
+      };
+    }
+  } catch (error) {
+    console.error("Error fetching quotation settings:", error);
+  }
+
+  return DEFAULT_QUOTATION_SETTINGS;
+}
+
+// ===========================================
 // Calculate Quotation Values
 // ===========================================
 
-export function calculateQuotationValues(
+/**
+ * Calculate quotation values using settings from database
+ * @param valorFipe - Vehicle FIPE value
+ * @param mensalidade - Monthly fee from pricing rules
+ * @param cotaParticipacao - Participation fee (optional)
+ */
+export async function calculateQuotationValues(
+  valorFipe: number,
   mensalidade: number,
   cotaParticipacao?: number | null
+): Promise<QuotationValues> {
+  // Get settings from database
+  const quotationSettings = await getQuotationSettings();
+
+  // Calculate adesao based on FIPE value and configured rate
+  const adesao = valorFipe * (quotationSettings.taxaAdesao / 100);
+
+  // Apply configured discount
+  const descontoMultiplier = 1 - (quotationSettings.desconto / 100);
+  const adesaoDesconto = adesao * descontoMultiplier;
+
+  return {
+    mensalidade,
+    adesao,
+    adesaoDesconto,
+    cotaParticipacao: cotaParticipacao ?? null,
+  };
+}
+
+/**
+ * Calculate quotation values synchronously with provided settings
+ * Use this when you already have the settings loaded
+ */
+export function calculateQuotationValuesSync(
+  valorFipe: number,
+  mensalidade: number,
+  taxaAdesao: number,
+  desconto: number,
+  cotaParticipacao?: number | null
 ): QuotationValues {
-  const adesao = mensalidade * 2;
-  const adesaoDesconto = adesao * 0.8; // 20% discount
+  const adesao = valorFipe * (taxaAdesao / 100);
+  const descontoMultiplier = 1 - (desconto / 100);
+  const adesaoDesconto = adesao * descontoMultiplier;
 
   return {
     mensalidade,

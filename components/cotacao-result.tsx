@@ -131,20 +131,32 @@ export function CotacaoResult({
 
           <Separator />
 
-          <div className="flex justify-between items-center">
-            <span className="text-muted-foreground">Adesao</span>
-            <span className="text-muted-foreground line-through">
-              {formatCurrency(vehicle.pricing.adesao)}
-            </span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="text-muted-foreground">
-              Adesao com 20% de desconto
-            </span>
-            <span className="font-semibold text-light-green-600 dark:text-light-green-400">
-              {formatCurrency(vehicle.pricing.adesaoDesconto)}
-            </span>
-          </div>
+          {/* Show discount info only when there's a discount */}
+          {vehicle.pricing.adesao !== vehicle.pricing.adesaoDesconto ? (
+            <>
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">Adesao</span>
+                <span className="text-muted-foreground line-through">
+                  {formatCurrency(vehicle.pricing.adesao)}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">
+                  Adesao com {Math.round((1 - vehicle.pricing.adesaoDesconto / vehicle.pricing.adesao) * 100)}% de desconto
+                </span>
+                <span className="font-semibold text-light-green-600 dark:text-light-green-400">
+                  {formatCurrency(vehicle.pricing.adesaoDesconto)}
+                </span>
+              </div>
+            </>
+          ) : (
+            <div className="flex justify-between items-center">
+              <span className="text-muted-foreground">Adesao</span>
+              <span className="font-semibold text-primary">
+                {formatCurrency(vehicle.pricing.adesao)}
+              </span>
+            </div>
+          )}
 
           {vehicle.pricing.cotaParticipacao && (
             <>
