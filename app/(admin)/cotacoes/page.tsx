@@ -1,6 +1,9 @@
 import { Suspense } from "react";
+import Link from "next/link";
+import { Plus } from "lucide-react";
 import { CotacoesList } from "@/components/cotacoes-list";
 import { DashboardPageHeader } from "@/components/dashboard-page-header";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
@@ -96,6 +99,14 @@ export default function QuotationsPage() {
       <DashboardPageHeader
         title="Cotacoes"
         description="Gerencie as cotacoes de protecao veicular"
+        actions={
+          <Button asChild>
+            <Link href="/cotacoes/nova">
+              <Plus className="h-4 w-4 mr-2" />
+              Nova Cotacao
+            </Link>
+          </Button>
+        }
       />
 
       <Suspense fallback={<CotacoesListSkeleton />}>

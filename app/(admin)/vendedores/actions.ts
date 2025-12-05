@@ -43,20 +43,7 @@ import {
   type CreateSellerFormData,
   type UpdateSellerFormData,
 } from "@/lib/types/sellers";
-import { user, account } from "@/lib/schema";
-import crypto from "crypto";
-
-// Hash password using the same format as Better Auth
-async function hashPassword(password: string): Promise<string> {
-  const salt = crypto.randomBytes(16);
-  const hash = crypto.scryptSync(password, salt, 32);
-  return `${salt.toString("base64")}:${hash.toString("base64")}`;
-}
-
-// Generate a random ID
-function generateId(): string {
-  return crypto.randomUUID();
-}
+import { user } from "@/lib/schema";
 
 // ===========================================
 // Helper: Authorization Check
@@ -184,26 +171,20 @@ export async function createSellerAction(
       return { success: false, error: "Este email ja esta em uso" };
     }
 
-    // Create user account in Better Auth
-    const userId = generateId();
-    const hashedPassword = await hashPassword(data.password);
-
-    // Insert user
-    await db.insert(user).values({
-      id: userId,
-      name: data.name,
-      email: data.email,
-      emailVerified: true,
+    // Create user using Better Auth Admin API (properly hashes password)
+    const newUser = await auth.api.createUser({
+      body: {
+        email: data.email,
+        password: data.password,
+        name: data.name,
+      },
     });
 
-    // Insert account (credential provider)
-    await db.insert(account).values({
-      id: generateId(),
-      accountId: userId,
-      providerId: "credential",
-      userId: userId,
-      password: hashedPassword,
-    });
+    if (!newUser?.user?.id) {
+      return { success: false, error: "Erro ao criar conta de usuario" };
+    }
+
+    const userId = newUser.user.id;
 
     // Create seller record
     const seller = await createSeller({
@@ -229,6 +210,10 @@ export async function createSellerAction(
       }
       if (error.message === "FORBIDDEN") {
         return { success: false, error: "Acesso nao autorizado" };
+      }
+      // Handle Better Auth errors
+      if (error.message.includes("already exists")) {
+        return { success: false, error: "Este email ja esta cadastrado" };
       }
     }
 

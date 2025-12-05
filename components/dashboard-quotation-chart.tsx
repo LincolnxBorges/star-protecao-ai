@@ -1,15 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo } from "react";
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
 import { BarChart3 } from "lucide-react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   Card,
   CardContent,
@@ -30,8 +23,6 @@ interface DashboardQuotationChartProps {
   data: QuotationEvolutionData;
 }
 
-type ViewMode = "day" | "week" | "month";
-
 const chartConfig = {
   total: {
     label: "Cotações",
@@ -47,51 +38,23 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-// Generate mock data based on view mode
-function generateChartData(viewMode: ViewMode, originalData: QuotationEvolutionData) {
-  switch (viewMode) {
-    case "day":
-      // Last 7 days
-      return Array.from({ length: 7 }, (_, i) => {
-        const date = new Date();
-        date.setDate(date.getDate() - (6 - i));
-        const dayNames = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
-        return {
-          label: dayNames[date.getDay()],
-          total: Math.floor(Math.random() * 15) + 5,
-          accepted: Math.floor(Math.random() * 8) + 2,
-          previousTotal: Math.floor(Math.random() * 12) + 3,
-        };
-      });
-    case "week":
-      // Last 4 weeks
-      return Array.from({ length: 4 }, (_, i) => ({
-        label: `Sem ${i + 1}`,
-        total: Math.floor(Math.random() * 30) + 20,
-        accepted: Math.floor(Math.random() * 15) + 5,
-        previousTotal: Math.floor(Math.random() * 25) + 15,
-      }));
-    case "month":
-    default:
-      // Use original data (6 months)
-      return originalData.points.map(p => ({
-        label: p.label,
-        total: p.total || Math.floor(Math.random() * 50) + 10,
-        accepted: p.accepted || Math.floor(Math.random() * 20) + 5,
-        previousTotal: p.previousTotal || Math.floor(Math.random() * 40) + 8,
-      }));
-  }
-}
-
 export function DashboardQuotationChart({ data }: DashboardQuotationChartProps) {
-  const [viewMode, setViewMode] = useState<ViewMode>("week");
-
-  const chartData = generateChartData(viewMode, data);
+  // Memoize chart data to prevent unnecessary recalculations
+  const chartData = useMemo(() => {
+    return data.points.map(p => ({
+      label: p.label,
+      total: p.total,
+      accepted: p.accepted,
+      previousTotal: p.previousTotal,
+    }));
+  }, [data.points]);
 
   // Check if there's any data at all
-  const hasData = chartData.some(
-    (p) => p.total > 0 || p.accepted > 0 || p.previousTotal > 0
-  );
+  const hasData = useMemo(() => {
+    return chartData.some(
+      (p) => p.total > 0 || p.accepted > 0 || p.previousTotal > 0
+    );
+  }, [chartData]);
 
   if (!hasData) {
     return (
@@ -120,16 +83,7 @@ export function DashboardQuotationChart({ data }: DashboardQuotationChartProps) 
           <BarChart3 className="h-5 w-5 text-primary" />
           <CardTitle className="text-base font-semibold">Evolução de Cotações</CardTitle>
         </div>
-        <Select value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)}>
-          <SelectTrigger className="w-[140px] h-9">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="day">Por dia</SelectItem>
-            <SelectItem value="week">Por semana</SelectItem>
-            <SelectItem value="month">Por mês</SelectItem>
-          </SelectContent>
-        </Select>
+        <span className="text-sm text-muted-foreground">{data.periodLabel}</span>
       </CardHeader>
       <CardContent className="pb-4">
         <ChartContainer config={chartConfig} className="h-[250px] w-full">

@@ -27,7 +27,7 @@ export function CotacoesEmptyState({
       <p className="text-muted-foreground mb-6 max-w-md">{description}</p>
       {showCreateButton && (
         <Button asChild>
-          <Link href="/">
+          <Link href="/cotacoes/nova">
             <Plus className="h-4 w-4 mr-2" />
             Nova Cotacao
           </Link>

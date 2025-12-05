@@ -109,6 +109,7 @@ export const createQuotationSchema = z.object({
   customer: customerSchema,
   isRejected: z.boolean().optional(),
   rejectionReason: z.string().optional(),
+  sellerId: z.string().uuid().optional(), // ID do vendedor para atribuicao manual (bypassa round-robin)
 });
 
 export type CreateQuotationInput = z.infer<typeof createQuotationSchema>;

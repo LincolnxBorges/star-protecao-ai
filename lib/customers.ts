@@ -97,7 +97,26 @@ export async function findOrCreateByCpf(data: CustomerData): Promise<Customer> {
     .where(eq(customers.cpf, formattedCpf));
 
   if (existing.length > 0) {
-    return existing[0];
+    // Update existing customer with new data
+    const [updated] = await db
+      .update(customers)
+      .set({
+        name: data.name,
+        email: data.email,
+        phone: data.phone.replace(/\D/g, ""),
+        cep: data.cep.replace(/\D/g, ""),
+        street: data.street,
+        number: data.number,
+        complement: data.complement || null,
+        neighborhood: data.neighborhood,
+        city: data.city,
+        state: data.state.toUpperCase(),
+        updatedAt: new Date(),
+      })
+      .where(eq(customers.id, existing[0].id))
+      .returning();
+
+    return updated;
   }
 
   // Create new customer

@@ -282,22 +282,22 @@ export async function countPendingLeads(sellerId: string): Promise<number> {
 /**
  * Get the next seller to assign using round-robin algorithm.
  * Selects the active seller with the oldest lastAssignmentAt (or null = never assigned).
- * Uses createdAt as tiebreaker.
+ * Uses roundRobinPosition as secondary criteria and createdAt as tiebreaker.
  *
  * @returns The next seller to assign, or null if no active sellers exist
  */
 export async function getNextActiveSeller(): Promise<Seller | null> {
   // Query active sellers ordered by:
-  // 1. roundRobinPosition ASC (queue order)
-  // 2. lastAssignmentAt NULLS FIRST (never assigned get priority)
-  // 3. createdAt ASC (tiebreaker)
+  // 1. lastAssignmentAt NULLS FIRST (never assigned get priority, then oldest assignment)
+  // 2. roundRobinPosition ASC (queue order for tiebreaker)
+  // 3. createdAt ASC (final tiebreaker)
   const results = await db
     .select()
     .from(sellers)
     .where(eq(sellers.status, "ACTIVE"))
     .orderBy(
-      asc(sellers.roundRobinPosition),
       sql`${sellers.lastAssignmentAt} ASC NULLS FIRST`,
+      asc(sellers.roundRobinPosition),
       asc(sellers.createdAt)
     )
     .limit(1);

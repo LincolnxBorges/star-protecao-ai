@@ -1,3 +1,12 @@
+/**
+ * Cotacoes Nova Form Component
+ * @module components/cotacoes-nova-form
+ *
+ * Wizard form para criar cotacao manual no painel administrativo.
+ * Reutiliza os componentes existentes do fluxo publico /cotacao.
+ * A cotacao e atribuida diretamente ao seller logado (sem round-robin).
+ */
+
 "use client";
 
 import { useState } from "react";
@@ -7,6 +16,12 @@ import { CotacaoResult } from "@/components/cotacao-result";
 import { CotacaoRejected } from "@/components/cotacao-rejected";
 import { CotacaoFormCustomer } from "@/components/cotacao-form-customer";
 import { WizardSteps, WizardStep } from "@/components/wizard-step";
+import { Card, CardContent } from "@/components/ui/card";
+import { toast } from "sonner";
+
+interface CotacoesNovaFormProps {
+  sellerId: string; // ID do seller logado para atribuicao direta
+}
 
 type Step = "vehicle" | "result" | "rejected" | "customer";
 
@@ -49,13 +64,11 @@ interface CustomerData {
   state: string;
 }
 
-export default function CotacaoPage() {
+export function CotacoesNovaForm({ sellerId }: CotacoesNovaFormProps) {
   const router = useRouter();
   const [step, setStep] = useState<Step>("vehicle");
   const [vehicleData, setVehicleData] = useState<VehicleData | null>(null);
-  const [rejectionError, setRejectionError] = useState<RejectionError | null>(
-    null
-  );
+  const [rejectionError, setRejectionError] = useState<RejectionError | null>(null);
   const [saveAsLead, setSaveAsLead] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -119,20 +132,20 @@ export default function CotacaoPage() {
           pricing: saveAsLead ? undefined : vehicleData.pricing,
           isRejected: saveAsLead,
           rejectionReason: saveAsLead ? rejectionError?.message : undefined,
+          sellerId, // Atribui diretamente ao seller logado (bypassa round-robin)
         }),
       });
 
       const result = await response.json();
 
       if (result.success) {
-        router.push(`/cotacao/${result.data.id}`);
+        toast.success("Cotacao criada com sucesso!");
+        router.push(`/cotacoes/${result.data.id}`);
       } else {
-        console.error("Quotation creation failed:", result.error);
-        alert(result.error?.message || "Erro ao criar cotacao. Tente novamente.");
+        toast.error(result.error?.message || "Erro ao criar cotacao. Tente novamente.");
       }
-    } catch (error) {
-      console.error("Quotation creation error:", error);
-      alert("Erro ao criar cotacao. Tente novamente.");
+    } catch {
+      toast.error("Erro ao criar cotacao. Tente novamente.");
     } finally {
       setIsSubmitting(false);
     }
@@ -149,21 +162,11 @@ export default function CotacaoPage() {
   }
 
   return (
-    <div className="flex flex-col items-center p-4 py-8">
-      <div className="w-full max-w-2xl">
-        {/* Header */}
-        <div className="mb-8 text-center">
-          <h1 className="text-dashboard-h1 font-bold text-foreground mb-2">
-            Cotacao de Protecao Veicular
-          </h1>
-          <p className="text-body-small text-muted-foreground">
-            Informe os dados do seu veiculo para receber uma cotacao
-          </p>
-        </div>
-
-        {/* Wizard Steps - only show for normal flow */}
-        {step !== "rejected" && (
-          <div className="mb-8">
+    <div className="space-y-6">
+      {/* Wizard Steps - only show for normal flow */}
+      {step !== "rejected" && (
+        <Card>
+          <CardContent className="py-6">
             <WizardSteps orientation="horizontal" className="max-w-lg mx-auto">
               <WizardStep
                 step={1}
@@ -180,48 +183,48 @@ export default function CotacaoPage() {
               <WizardStep
                 step={3}
                 title="Dados Pessoais"
-                description="Finalize sua cotacao"
+                description="Finalize a cotacao"
                 status={getStepStatus("customer")}
                 isLast
               />
             </WizardSteps>
-          </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Content */}
+      <div className="flex justify-center">
+        {step === "vehicle" && (
+          <CotacaoFormVehicle
+            onSuccess={handleVehicleSuccess}
+            onRejected={handleVehicleRejected}
+          />
         )}
 
-        {/* Content */}
-        <div className="flex justify-center">
-          {step === "vehicle" && (
-            <CotacaoFormVehicle
-              onSuccess={handleVehicleSuccess}
-              onRejected={handleVehicleRejected}
-            />
-          )}
+        {step === "result" && vehicleData && (
+          <CotacaoResult
+            vehicle={vehicleData}
+            onContinue={handleContinueToCustomer}
+            onBack={handleBack}
+          />
+        )}
 
-          {step === "result" && vehicleData && (
-            <CotacaoResult
-              vehicle={vehicleData}
-              onContinue={handleContinueToCustomer}
-              onBack={handleBack}
-            />
-          )}
+        {step === "rejected" && rejectionError && (
+          <CotacaoRejected
+            error={rejectionError}
+            saveAsLead={saveAsLead}
+            onCollectData={handleCollectLeadData}
+            onBack={handleBack}
+          />
+        )}
 
-          {step === "rejected" && rejectionError && (
-            <CotacaoRejected
-              error={rejectionError}
-              saveAsLead={saveAsLead}
-              onCollectData={handleCollectLeadData}
-              onBack={handleBack}
-            />
-          )}
-
-          {step === "customer" && (
-            <CotacaoFormCustomer
-              onSubmit={handleCustomerSubmit}
-              onBack={handleBackToResult}
-              isLoading={isSubmitting}
-            />
-          )}
-        </div>
+        {step === "customer" && (
+          <CotacaoFormCustomer
+            onSubmit={handleCustomerSubmit}
+            onBack={handleBackToResult}
+            isLoading={isSubmitting}
+          />
+        )}
       </div>
     </div>
   );
