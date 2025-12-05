@@ -1,4 +1,10 @@
 import { Suspense } from "react";
+import { redirect } from "next/navigation";
+import { headers } from "next/headers";
+import { auth } from "@/lib/auth";
+import { db } from "@/lib/db";
+import { sellers } from "@/lib/schema";
+import { eq } from "drizzle-orm";
 import { VendedoresList } from "@/components/vendedores-list";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
@@ -115,10 +121,35 @@ function VendedoresListSkeleton() {
   );
 }
 
+async function VendedoresContent() {
+  // Get session
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+
+  if (!session?.user) {
+    redirect("/login");
+  }
+
+  // Get seller info
+  const [seller] = await db
+    .select()
+    .from(sellers)
+    .where(eq(sellers.userId, session.user.id));
+
+  if (!seller) {
+    redirect("/login");
+  }
+
+  const isAdmin = seller.role === "ADMIN";
+
+  return <VendedoresList isAdmin={isAdmin} />;
+}
+
 export default function VendedoresPage() {
   return (
     <Suspense fallback={<VendedoresListSkeleton />}>
-      <VendedoresList />
+      <VendedoresContent />
     </Suspense>
   );
 }

@@ -171,6 +171,25 @@ export interface DateRange {
 }
 
 // ===========================================
+// Quotation Evolution Chart Types
+// ===========================================
+
+export interface QuotationEvolutionPoint {
+  date: string;
+  label: string;
+  total: number;
+  accepted: number;
+  previousTotal: number;
+  previousAccepted: number;
+}
+
+export interface QuotationEvolutionData {
+  points: QuotationEvolutionPoint[];
+  periodLabel: string;
+  previousPeriodLabel: string;
+}
+
+// ===========================================
 // Server Action Types
 // ===========================================
 
