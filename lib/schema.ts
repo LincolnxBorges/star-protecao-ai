@@ -1,4 +1,61 @@
-import { pgTable, text, timestamp, boolean } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  text,
+  timestamp,
+  boolean,
+  uuid,
+  varchar,
+  decimal,
+  integer,
+  pgEnum,
+} from "drizzle-orm/pg-core";
+
+// ===========================================
+// Enums
+// ===========================================
+
+export const vehicleCategoryEnum = pgEnum("vehicle_category", [
+  "NORMAL",
+  "ESPECIAL",
+  "UTILITARIO",
+  "MOTO",
+]);
+
+export const usageTypeEnum = pgEnum("usage_type", ["PARTICULAR", "COMERCIAL"]);
+
+export const quotationStatusEnum = pgEnum("quotation_status", [
+  "PENDING",
+  "CONTACTED",
+  "ACCEPTED",
+  "EXPIRED",
+  "CANCELLED",
+  "REJECTED",
+]);
+
+export const sellerRoleEnum = pgEnum("seller_role", ["SELLER", "ADMIN"]);
+
+export const sellerStatusEnum = pgEnum("seller_status", [
+  "ACTIVE",
+  "INACTIVE",
+  "VACATION",
+]);
+
+export const roundRobinMethodEnum = pgEnum("round_robin_method", [
+  "SEQUENTIAL",
+  "LOAD_BALANCE",
+  "PERFORMANCE",
+  "SPEED",
+]);
+
+export const activityTypeEnum = pgEnum("activity_type", [
+  "CREATION",
+  "STATUS_CHANGE",
+  "WHATSAPP_SENT",
+  "NOTE",
+  "CALL",
+  "EMAIL",
+  "ASSIGNMENT",
+]);
 
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
@@ -58,4 +115,146 @@ export const verification = pgTable("verification", {
     .defaultNow()
     .$onUpdate(() => new Date())
     .notNull(),
+});
+
+// ===========================================
+// Cotacao Veicular Tables
+// ===========================================
+
+export const customers = pgTable("customers", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: varchar("name", { length: 255 }).notNull(),
+  email: varchar("email", { length: 255 }).notNull(),
+  phone: varchar("phone", { length: 20 }).notNull(),
+  cpf: varchar("cpf", { length: 14 }).notNull().unique(),
+  cep: varchar("cep", { length: 9 }).notNull(),
+  street: varchar("street", { length: 255 }).notNull(),
+  number: varchar("number", { length: 20 }).notNull(),
+  complement: varchar("complement", { length: 100 }),
+  neighborhood: varchar("neighborhood", { length: 100 }).notNull(),
+  city: varchar("city", { length: 100 }).notNull(),
+  state: varchar("state", { length: 2 }).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+});
+
+export const vehicles = pgTable("vehicles", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  placa: varchar("placa", { length: 8 }).notNull(),
+  marca: varchar("marca", { length: 100 }).notNull(),
+  modelo: varchar("modelo", { length: 100 }).notNull(),
+  ano: varchar("ano", { length: 10 }).notNull(),
+  valorFipe: decimal("valor_fipe", { precision: 12, scale: 2 }).notNull(),
+  codigoFipe: varchar("codigo_fipe", { length: 20 }).notNull(),
+  combustivel: varchar("combustivel", { length: 50 }),
+  cor: varchar("cor", { length: 50 }),
+  categoria: vehicleCategoryEnum("categoria").notNull(),
+  tipoUso: usageTypeEnum("tipo_uso").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+});
+
+export const sellers = pgTable("sellers", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: text("user_id").references(() => user.id),
+  name: varchar("name", { length: 255 }).notNull(),
+  email: varchar("email", { length: 255 }).notNull().unique(),
+  phone: varchar("phone", { length: 20 }),
+  cargo: varchar("cargo", { length: 100 }),
+  image: text("image"),
+  status: sellerStatusEnum("status").notNull().default("ACTIVE"),
+  role: sellerRoleEnum("role").notNull().default("SELLER"),
+  deactivationReason: text("deactivation_reason"),
+  deactivatedAt: timestamp("deactivated_at", { withTimezone: true }),
+  roundRobinPosition: integer("round_robin_position"),
+  notifyEmail: boolean("notify_email").default(true).notNull(),
+  notifyWhatsapp: boolean("notify_whatsapp").default(true).notNull(),
+  lastAssignmentAt: timestamp("last_assignment_at", { withTimezone: true }),
+  assignmentCount: integer("assignment_count").default(0),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+});
+
+export const quotations = pgTable("quotations", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  customerId: uuid("customer_id")
+    .notNull()
+    .references(() => customers.id),
+  vehicleId: uuid("vehicle_id")
+    .notNull()
+    .references(() => vehicles.id),
+  sellerId: uuid("seller_id").references(() => sellers.id),
+  mensalidade: decimal("mensalidade", { precision: 10, scale: 2 }).notNull(),
+  adesao: decimal("adesao", { precision: 10, scale: 2 }).notNull(),
+  adesaoDesconto: decimal("adesao_desconto", { precision: 10, scale: 2 }).notNull(),
+  cotaParticipacao: decimal("cota_participacao", { precision: 10, scale: 2 }),
+  status: quotationStatusEnum("status").notNull().default("PENDING"),
+  rejectionReason: varchar("rejection_reason", { length: 255 }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }),
+  contactedAt: timestamp("contacted_at", { withTimezone: true }),
+  acceptedAt: timestamp("accepted_at", { withTimezone: true }),
+  notes: text("notes"),
+});
+
+export const pricingRules = pgTable("pricing_rules", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  categoria: vehicleCategoryEnum("categoria").notNull(),
+  faixaMin: decimal("faixa_min", { precision: 12, scale: 2 }).notNull(),
+  faixaMax: decimal("faixa_max", { precision: 12, scale: 2 }).notNull(),
+  mensalidade: decimal("mensalidade", { precision: 10, scale: 2 }).notNull(),
+  cotaParticipacao: decimal("cota_participacao", { precision: 10, scale: 2 }),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+});
+
+export const blacklist = pgTable("blacklist", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  marca: varchar("marca", { length: 100 }).notNull(),
+  modelo: varchar("modelo", { length: 100 }),
+  motivo: varchar("motivo", { length: 255 }).default(
+    "Nao trabalhamos com este veiculo"
+  ),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+});
+
+export const roundRobinConfig = pgTable("round_robin_config", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  method: roundRobinMethodEnum("method").notNull().default("SEQUENTIAL"),
+  currentIndex: integer("current_index").default(0),
+  pendingLeadLimit: integer("pending_lead_limit"),
+  skipOverloaded: boolean("skip_overloaded").default(true).notNull(),
+  notifyWhenAllOverloaded: boolean("notify_when_all_overloaded").default(true).notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+});
+
+// ===========================================
+// Dashboard Tables
+// ===========================================
+
+export const sellerGoals = pgTable("seller_goals", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  sellerId: uuid("seller_id")
+    .notNull()
+    .references(() => sellers.id, { onDelete: "cascade" }),
+  month: integer("month").notNull(),
+  year: integer("year").notNull(),
+  targetAccepted: integer("target_accepted").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+});
+
+// ===========================================
+// Quotation Activities Table
+// ===========================================
+
+export const quotationActivities = pgTable("quotation_activities", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  quotationId: uuid("quotation_id")
+    .notNull()
+    .references(() => quotations.id, { onDelete: "cascade" }),
+  type: activityTypeEnum("type").notNull(),
+  description: text("description").notNull(),
+  authorId: text("author_id").references(() => user.id),
+  authorName: varchar("author_name", { length: 255 }),
+  metadata: text("metadata"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
 });
