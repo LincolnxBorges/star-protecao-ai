@@ -57,6 +57,24 @@ export const activityTypeEnum = pgEnum("activity_type", [
   "ASSIGNMENT",
 ]);
 
+export const interactionTypeEnum = pgEnum("interaction_type", [
+  "CALL_MADE",
+  "CALL_RECEIVED",
+  "WHATSAPP_SENT",
+  "WHATSAPP_RECEIVED",
+  "EMAIL_SENT",
+  "EMAIL_RECEIVED",
+  "MEETING",
+  "NOTE",
+]);
+
+export const interactionResultEnum = pgEnum("interaction_result", [
+  "POSITIVE",
+  "NEUTRAL",
+  "NEGATIVE",
+  "NO_CONTACT",
+]);
+
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
@@ -134,6 +152,7 @@ export const customers = pgTable("customers", {
   neighborhood: varchar("neighborhood", { length: 100 }).notNull(),
   city: varchar("city", { length: 100 }).notNull(),
   state: varchar("state", { length: 2 }).notNull(),
+  deletedAt: timestamp("deleted_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
@@ -256,5 +275,24 @@ export const quotationActivities = pgTable("quotation_activities", {
   authorId: text("author_id").references(() => user.id),
   authorName: varchar("author_name", { length: 255 }),
   metadata: text("metadata"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+});
+
+// ===========================================
+// Client Interactions Table
+// ===========================================
+
+export const clientInteractions = pgTable("client_interactions", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  customerId: uuid("customer_id")
+    .notNull()
+    .references(() => customers.id, { onDelete: "cascade" }),
+  sellerId: uuid("seller_id")
+    .notNull()
+    .references(() => sellers.id),
+  type: interactionTypeEnum("type").notNull(),
+  result: interactionResultEnum("result"),
+  description: text("description").notNull(),
+  scheduledFollowUp: timestamp("scheduled_follow_up", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
 });

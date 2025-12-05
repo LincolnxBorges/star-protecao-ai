@@ -76,7 +76,7 @@ async function createUsers() {
           name: userData.name,
           email: userData.email,
           role: userData.role,
-          isActive: true,
+          status: "ACTIVE",
         });
 
         console.log(`  ✓ Created ${userData.role}: ${userData.email}`);
@@ -103,7 +103,7 @@ async function createUsers() {
             name: userData.name,
             email: userData.email,
             role: userData.role,
-            isActive: true,
+            status: "ACTIVE",
           });
           console.log(`  ✓ Created seller record for existing user: ${userData.email}`);
         } else {

@@ -89,7 +89,7 @@ async function createUsers() {
       name: userData.name,
       email: userData.email,
       role: userData.role,
-      isActive: true,
+      status: "ACTIVE",
     });
 
     console.log(`  ✓ Created ${userData.role}: ${userData.email}`);

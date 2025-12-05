@@ -189,7 +189,10 @@ async function seed() {
   // ===========================================
   console.log("\n🔄 Inserting round-robin config...");
   await db.insert(roundRobinConfig).values({
+    method: "SEQUENTIAL",
     currentIndex: 0,
+    skipOverloaded: true,
+    notifyWhenAllOverloaded: true,
   });
   console.log("  ✓ Round-robin config initialized");
 

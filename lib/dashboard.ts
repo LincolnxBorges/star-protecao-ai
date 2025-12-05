@@ -533,7 +533,7 @@ export async function getRanking(currentSellerId: string): Promise<RankingData> 
         lte(quotations.acceptedAt, range.end)
       )
     )
-    .where(eq(sellers.isActive, true))
+    .where(eq(sellers.status, "ACTIVE"))
     .groupBy(sellers.id, sellers.name)
     .orderBy(desc(count(quotations.id)))
     .limit(5);
