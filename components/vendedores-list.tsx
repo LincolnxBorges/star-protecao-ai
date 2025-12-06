@@ -31,6 +31,7 @@ import { VendedoresStatusTabs } from "@/components/vendedores-status-tabs";
 import { VendedoresRoundRobinCard } from "@/components/vendedores-round-robin-card";
 import { VendedoresRoundRobinModal } from "@/components/vendedores-round-robin-modal";
 import { VendedoresModalReassign } from "@/components/vendedores-modal-reassign";
+import { VendedoresGoalsCard } from "@/components/vendedores-goals-card";
 import { listSellersAction } from "@/app/(admin)/vendedores/actions";
 import type {
   SellerWithMetrics,
@@ -373,6 +374,9 @@ export function VendedoresList({ initialData, isAdmin = false }: VendedoresListP
         key={roundRobinKey}
         onOpenConfig={handleOpenRoundRobinConfig}
       />
+
+      {/* Goals Card - Admin only */}
+      <VendedoresGoalsCard isAdmin={isAdmin} />
 
       {/* Results Card */}
       <Card>
