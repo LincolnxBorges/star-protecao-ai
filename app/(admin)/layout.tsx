@@ -3,6 +3,9 @@ import { getSession } from "@/lib/auth-server";
 import { getSellerByUserId } from "@/lib/sellers";
 import { DashboardSidebar } from "@/components/dashboard-sidebar";
 
+// Force dynamic rendering for all admin pages (they access database)
+export const dynamic = "force-dynamic";
+
 interface AdminLayoutProps {
   children: React.ReactNode;
 }
