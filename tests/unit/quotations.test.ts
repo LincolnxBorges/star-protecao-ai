@@ -5,7 +5,6 @@ import {
   getStatusCounts,
   createQuotationActivity,
   listQuotationActivities,
-  listQuotationsWithFilters,
 } from "@/lib/quotations";
 import type { QuotationFilters } from "@/lib/types/quotations";
 
@@ -636,10 +635,6 @@ describe("Quotation Activities", () => {
     it("should fetch author name from user table if not provided", async () => {
       const { db } = await import("@/lib/db");
 
-      // First call: select user name
-      // Second call: insert activity
-      const callCount = 0;
-
       vi.mocked(db.select).mockReturnValue({
         from: vi.fn().mockReturnValue({
           where: vi.fn().mockResolvedValue([{ name: "Fetched Name" }]),
@@ -663,7 +658,7 @@ describe("Quotation Activities", () => {
         }),
       } as never);
 
-      const result = await createQuotationActivity({
+      await createQuotationActivity({
         quotationId: "quotation-id",
         type: "NOTE",
         description: "Test note",
