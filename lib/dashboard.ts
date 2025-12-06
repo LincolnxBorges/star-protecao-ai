@@ -655,6 +655,7 @@ const MONTH_NAMES = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Se
 
 export async function getQuotationEvolution(
   sellerId: string,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _period: PeriodFilter
 ): Promise<QuotationEvolutionData> {
   const now = new Date();

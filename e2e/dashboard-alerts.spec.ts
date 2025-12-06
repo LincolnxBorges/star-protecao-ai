@@ -14,7 +14,6 @@ test.describe("Dashboard Urgent Alerts", () => {
   }) => {
     await page.goto("/dashboard");
 
-    const alertSection = page.locator('[data-testid="urgent-alerts"]');
     // Alert should be visible if there are expiring quotations
     const expiringAlert = page.locator('[data-testid="alert-expiring"]');
 

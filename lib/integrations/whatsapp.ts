@@ -291,6 +291,7 @@ export class ZApiAdapter implements WhatsAppProvider {
 // ===========================================
 
 export class BaileysAdapter implements WhatsAppProvider {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   constructor(_settings: WhatsAppSettings) {
     // Baileys requires local server setup
   }
@@ -303,6 +304,7 @@ export class BaileysAdapter implements WhatsAppProvider {
     };
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async sendMessage(_phone: string, _message: string): Promise<WhatsAppSendResult> {
     return {
       success: false,

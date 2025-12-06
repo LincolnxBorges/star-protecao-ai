@@ -91,19 +91,6 @@ function formatCurrency(value: number): string {
   }).format(value);
 }
 
-function formatPhone(phone: string): string {
-  // Remove non-digits
-  const digits = phone.replace(/\D/g, "");
-
-  // Format: (XX) XXXXX-XXXX or (XX) XXXX-XXXX
-  if (digits.length === 11) {
-    return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
-  } else if (digits.length === 10) {
-    return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
-  }
-  return phone;
-}
-
 function formatCPF(cpf: string): string {
   // Remove non-digits
   const digits = cpf.replace(/\D/g, "");

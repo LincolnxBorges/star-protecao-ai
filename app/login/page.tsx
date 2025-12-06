@@ -4,6 +4,9 @@ import { LoginFooter } from "@/components/login-footer";
 import { getSettings } from "@/lib/settings";
 import type { CompanySettings } from "@/lib/settings-schemas";
 
+// Force dynamic rendering to avoid pre-rendering with database calls
+export const dynamic = "force-dynamic";
+
 export default async function LoginPage() {
   const companySettings = await getSettings<CompanySettings>("company");
   const companyName = companySettings.nomeFantasia || companySettings.nome;

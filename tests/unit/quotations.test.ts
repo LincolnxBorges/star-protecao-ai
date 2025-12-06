@@ -1,11 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { calculateQuotationValues } from "@/lib/pricing";
+import { calculateQuotationValuesSync } from "@/lib/pricing";
 import {
   createQuotation,
   getStatusCounts,
   createQuotationActivity,
   listQuotationActivities,
-  listQuotationsWithFilters,
 } from "@/lib/quotations";
 import type { QuotationFilters } from "@/lib/types/quotations";
 
@@ -214,25 +213,31 @@ describe("Quotation Creation", () => {
 });
 
 describe("Quotation Values Calculation", () => {
-  describe("calculateQuotationValues", () => {
-    it("should calculate adesao as 2x mensalidade", () => {
-      const mensalidade = 300;
-      const result = calculateQuotationValues(mensalidade);
+  // Using fixed settings: taxaAdesao=3%, desconto=20%
+  const taxaAdesao = 3;
+  const desconto = 20;
+  const valorFipe = 50000; // Fixed FIPE value for tests
 
-      expect(result.adesao).toBe(mensalidade * 2);
+  describe("calculateQuotationValuesSync", () => {
+    it("should calculate adesao based on FIPE value and rate", () => {
+      const mensalidade = 300;
+      const result = calculateQuotationValuesSync(valorFipe, mensalidade, taxaAdesao, desconto);
+
+      expect(result.adesao).toBe(valorFipe * (taxaAdesao / 100)); // 3% of 50000 = 1500
     });
 
-    it("should calculate adesaoDesconto as 80% of adesao", () => {
+    it("should calculate adesaoDesconto with configured discount", () => {
       const mensalidade = 300;
-      const result = calculateQuotationValues(mensalidade);
-      const expectedDiscount = mensalidade * 2 * 0.8;
+      const result = calculateQuotationValuesSync(valorFipe, mensalidade, taxaAdesao, desconto);
+      const expectedAdesao = valorFipe * (taxaAdesao / 100);
+      const expectedDiscount = expectedAdesao * (1 - desconto / 100);
 
-      expect(result.adesaoDesconto).toBe(expectedDiscount);
+      expect(result.adesaoDesconto).toBe(expectedDiscount); // 80% of 1500 = 1200
     });
 
     it("should preserve mensalidade value", () => {
       const mensalidade = 325.95;
-      const result = calculateQuotationValues(mensalidade);
+      const result = calculateQuotationValuesSync(valorFipe, mensalidade, taxaAdesao, desconto);
 
       expect(result.mensalidade).toBe(mensalidade);
     });
@@ -240,35 +245,34 @@ describe("Quotation Values Calculation", () => {
     it("should handle cota participacao when provided", () => {
       const mensalidade = 300;
       const cotaParticipacao = 2500;
-      const result = calculateQuotationValues(mensalidade, cotaParticipacao);
+      const result = calculateQuotationValuesSync(valorFipe, mensalidade, taxaAdesao, desconto, cotaParticipacao);
 
       expect(result.cotaParticipacao).toBe(cotaParticipacao);
     });
 
     it("should set cota participacao to null when not provided", () => {
-      const result = calculateQuotationValues(300);
+      const result = calculateQuotationValuesSync(valorFipe, 300, taxaAdesao, desconto);
 
       expect(result.cotaParticipacao).toBeNull();
     });
 
-    it("should calculate correctly for all pricing tiers", () => {
-      // Test with values from pricing table
+    it("should calculate correctly for different FIPE values", () => {
       const testCases = [
-        { mensalidade: 95.00, expectedAdesao: 190, expectedDesconto: 152 },
-        { mensalidade: 201.67, expectedAdesao: 403.34, expectedDesconto: 322.67 },
-        { mensalidade: 532.58, expectedAdesao: 1065.16, expectedDesconto: 852.13 },
+        { fipe: 30000, expectedAdesao: 900, expectedDesconto: 720 },
+        { fipe: 50000, expectedAdesao: 1500, expectedDesconto: 1200 },
+        { fipe: 100000, expectedAdesao: 3000, expectedDesconto: 2400 },
       ];
 
-      testCases.forEach(({ mensalidade, expectedAdesao, expectedDesconto }) => {
-        const result = calculateQuotationValues(mensalidade);
+      testCases.forEach(({ fipe, expectedAdesao, expectedDesconto }) => {
+        const result = calculateQuotationValuesSync(fipe, 200, taxaAdesao, desconto);
 
         expect(result.adesao).toBeCloseTo(expectedAdesao, 2);
         expect(result.adesaoDesconto).toBeCloseTo(expectedDesconto, 2);
       });
     });
 
-    it("should handle zero mensalidade edge case", () => {
-      const result = calculateQuotationValues(0);
+    it("should handle zero values edge case", () => {
+      const result = calculateQuotationValuesSync(0, 0, taxaAdesao, desconto);
 
       expect(result.mensalidade).toBe(0);
       expect(result.adesao).toBe(0);
@@ -631,10 +635,6 @@ describe("Quotation Activities", () => {
     it("should fetch author name from user table if not provided", async () => {
       const { db } = await import("@/lib/db");
 
-      // First call: select user name
-      // Second call: insert activity
-      const callCount = 0;
-
       vi.mocked(db.select).mockReturnValue({
         from: vi.fn().mockReturnValue({
           where: vi.fn().mockResolvedValue([{ name: "Fetched Name" }]),
@@ -658,7 +658,7 @@ describe("Quotation Activities", () => {
         }),
       } as never);
 
-      const result = await createQuotationActivity({
+      await createQuotationActivity({
         quotationId: "quotation-id",
         type: "NOTE",
         description: "Test note",

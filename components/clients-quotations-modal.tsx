@@ -24,8 +24,7 @@ import {
   XCircle,
   Timer,
 } from "lucide-react";
-import { format, differenceInDays, isPast, isFuture } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { format, differenceInDays, isPast } from "date-fns";
 import {
   Dialog,
   DialogContent,
@@ -126,6 +125,7 @@ export function ClientsQuotationsModal({
         setData(result);
       });
     } else {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setData(null);
     }
   }, [clientId, isOpen, onLoadQuotations]);

@@ -26,7 +26,6 @@ import { sellers } from "@/lib/schema";
 import { eq } from "drizzle-orm";
 import type {
   QuotationFilters,
-  PaginatedResult,
   StatusCount,
   QuotationActivity,
   UpdateStatusResult,

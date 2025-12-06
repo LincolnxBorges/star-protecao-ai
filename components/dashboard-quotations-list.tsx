@@ -19,7 +19,7 @@ export function DashboardQuotationsList({
   quotations,
 }: DashboardQuotationsListProps) {
   const router = useRouter();
-  const [isPending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean;
     quotationId: string;

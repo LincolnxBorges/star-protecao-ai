@@ -26,7 +26,6 @@ import {
   gte,
   lte,
   exists,
-  inArray,
 } from "drizzle-orm";
 import type {
   ClientStatus,
@@ -355,8 +354,7 @@ export async function getClientKPIs(
 
   const negotiating = negotiatingResult?.count || 0;
 
-  // Inativos (sem cotacao nos ultimos 30 dias)
-  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  // Inativos (calculado como total - convertidos - negociando)
   const inactive = Math.max(0, total - converted - negotiating);
 
   const convertedPercentage = total > 0 ? (converted / total) * 100 : 0;
@@ -734,6 +732,7 @@ export async function getClientInteractions(
 
 export async function softDeleteClient(
   clientId: string,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _adminId: string
 ): Promise<{ success: boolean }> {
   const [updated] = await db

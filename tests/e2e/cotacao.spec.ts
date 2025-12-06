@@ -124,21 +124,17 @@ test.describe("Cotacao - Fluxo Publico", () => {
 });
 
 test.describe("Cotacao - Formulario do Cliente", () => {
-  test.skip("deve exibir formulario apos consulta bem-sucedida", async ({
-    page,
-  }) => {
+  test.skip("deve exibir formulario apos consulta bem-sucedida", async () => {
     // Este teste requer setup completo com mock das APIs
     // Pular por enquanto
   });
 
-  test.skip("deve validar CPF", async ({ page }) => {
+  test.skip("deve validar CPF", async () => {
     // Este teste requer setup completo com mock das APIs
     // Pular por enquanto
   });
 
-  test.skip("deve buscar endereco automaticamente pelo CEP", async ({
-    page,
-  }) => {
+  test.skip("deve buscar endereco automaticamente pelo CEP", async () => {
     // Este teste requer setup completo com mock das APIs
     // Pular por enquanto
   });

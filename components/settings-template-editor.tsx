@@ -45,7 +45,6 @@ import {
   Copy,
   Eye,
   AlertCircle,
-  CheckCircle,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
@@ -350,7 +349,7 @@ export function SettingsTemplateEditor({ readOnly = false }: SettingsTemplateEdi
 
           {templates.length === 0 ? (
             <div className="py-8 text-center text-muted-foreground">
-              Nenhum template cadastrado. Clique em "Novo Template" para criar.
+              Nenhum template cadastrado. Clique em &quot;Novo Template&quot; para criar.
             </div>
           ) : (
             <Table>
@@ -570,7 +569,7 @@ export function SettingsTemplateEditor({ readOnly = false }: SettingsTemplateEdi
           <DialogHeader>
             <DialogTitle>Confirmar Exclusao</DialogTitle>
             <DialogDescription>
-              Tem certeza que deseja excluir o template "{templateToDelete?.name}"?
+              Tem certeza que deseja excluir o template &quot;{templateToDelete?.name}&quot;?
               Esta acao nao pode ser desfeita.
             </DialogDescription>
           </DialogHeader>

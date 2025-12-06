@@ -23,65 +23,65 @@ test.describe("Admin - Autenticacao", () => {
 
 test.describe("Admin - Lista de Cotacoes", () => {
   // Testes que requerem autenticacao - pular por enquanto
-  test.skip("deve exibir lista de cotacoes apos login", async ({ page }) => {
+  test.skip("deve exibir lista de cotacoes apos login", async () => {
     // Requer setup de autenticacao
   });
 
-  test.skip("deve filtrar cotacoes por status", async ({ page }) => {
+  test.skip("deve filtrar cotacoes por status", async () => {
     // Requer setup de autenticacao
   });
 
-  test.skip("deve navegar para detalhes da cotacao", async ({ page }) => {
+  test.skip("deve navegar para detalhes da cotacao", async () => {
     // Requer setup de autenticacao
   });
 });
 
 test.describe("Admin - Detalhes da Cotacao", () => {
-  test.skip("deve exibir informacoes do cliente", async ({ page }) => {
+  test.skip("deve exibir informacoes do cliente", async () => {
     // Requer setup de autenticacao
   });
 
-  test.skip("deve exibir informacoes do veiculo", async ({ page }) => {
+  test.skip("deve exibir informacoes do veiculo", async () => {
     // Requer setup de autenticacao
   });
 
-  test.skip("deve permitir atualizar status da cotacao", async ({ page }) => {
+  test.skip("deve permitir atualizar status da cotacao", async () => {
     // Requer setup de autenticacao
   });
 });
 
 test.describe("Admin - Gestao de Precos", () => {
-  test.skip("deve redirecionar vendedores para cotacoes", async ({ page }) => {
+  test.skip("deve redirecionar vendedores para cotacoes", async () => {
     // Requer setup de autenticacao como SELLER
   });
 
-  test.skip("deve exibir tabela de precos para admin", async ({ page }) => {
+  test.skip("deve exibir tabela de precos para admin", async () => {
     // Requer setup de autenticacao como ADMIN
   });
 
-  test.skip("deve permitir criar nova regra de preco", async ({ page }) => {
+  test.skip("deve permitir criar nova regra de preco", async () => {
     // Requer setup de autenticacao como ADMIN
   });
 
-  test.skip("deve permitir editar regra de preco", async ({ page }) => {
+  test.skip("deve permitir editar regra de preco", async () => {
     // Requer setup de autenticacao como ADMIN
   });
 });
 
 test.describe("Admin - Gestao de Blacklist", () => {
-  test.skip("deve exibir lista de blacklist para admin", async ({ page }) => {
+  test.skip("deve exibir lista de blacklist para admin", async () => {
     // Requer setup de autenticacao como ADMIN
   });
 
-  test.skip("deve permitir adicionar marca a blacklist", async ({ page }) => {
+  test.skip("deve permitir adicionar marca a blacklist", async () => {
     // Requer setup de autenticacao como ADMIN
   });
 
-  test.skip("deve permitir adicionar modelo a blacklist", async ({ page }) => {
+  test.skip("deve permitir adicionar modelo a blacklist", async () => {
     // Requer setup de autenticacao como ADMIN
   });
 
-  test.skip("deve permitir remover item da blacklist", async ({ page }) => {
+  test.skip("deve permitir remover item da blacklist", async () => {
     // Requer setup de autenticacao como ADMIN
   });
 });

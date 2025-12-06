@@ -13,7 +13,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Loader2, Search, Building2, MapPin, Phone, Globe } from "lucide-react";
+import { Loader2, Search, Building2, MapPin, Phone } from "lucide-react";
 import { SettingsLogoUpload } from "@/components/settings-logo-upload";
 import {
   companySettingsSchema,

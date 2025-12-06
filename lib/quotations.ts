@@ -20,7 +20,6 @@ import type {
   CreateActivityData,
   StatusCount,
   QuotationFilters,
-  VehicleCategory,
 } from "@/lib/types/quotations";
 
 // ===========================================
