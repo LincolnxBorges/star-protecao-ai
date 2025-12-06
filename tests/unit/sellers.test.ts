@@ -3,7 +3,7 @@
  * @module tests/unit/sellers.test
  */
 
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect } from "vitest";
 
 // Mock types for testing
 interface Seller {
