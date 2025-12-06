@@ -80,8 +80,9 @@ jobs:
 
       - run: pnpm run build
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
-          ENCRYPTION_KEY: ${{ secrets.ENCRYPTION_KEY }}
-          NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          # Use secrets if available, otherwise use placeholder values for CI
+          DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://user:pass@localhost:5432/db' }}
+          BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET || 'ci-placeholder-secret-32-chars-long' }}
+          ENCRYPTION_KEY: ${{ secrets.ENCRYPTION_KEY || 'ci-placeholder-encryption-key-64-characters-long-for-testing-only' }}
+          NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL || 'http://localhost:3000' }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY || 'sk-placeholder' }}
