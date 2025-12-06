@@ -11,6 +11,9 @@ import { CotacaoFooter } from "@/components/cotacao-footer";
 import { getSettings } from "@/lib/settings";
 import type { CompanySettings } from "@/lib/settings-schemas";
 
+// Force dynamic rendering (accesses database)
+export const dynamic = "force-dynamic";
+
 interface PublicLayoutProps {
   children: React.ReactNode;
 }
