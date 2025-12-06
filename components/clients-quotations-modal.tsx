@@ -24,8 +24,7 @@ import {
   XCircle,
   Timer,
 } from "lucide-react";
-import { format, differenceInDays, isPast, isFuture } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { format, differenceInDays, isPast } from "date-fns";
 import {
   Dialog,
   DialogContent,

@@ -91,6 +91,7 @@ export function AdminPricingTable() {
   // Fetch rules
   useEffect(() => {
     fetchRules();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filterCategoria]);
 
   async function fetchRules() {

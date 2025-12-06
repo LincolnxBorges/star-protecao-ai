@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import {
   findPricingRule,
-  calculateQuotationValues,
+  calculateQuotationValuesSync,
   listPricingRules,
   createPricingRule,
   updatePricingRule,
@@ -88,31 +88,43 @@ describe("Pricing", () => {
     });
   });
 
-  describe("calculateQuotationValues", () => {
-    it("should calculate correct values from mensalidade", () => {
-      const result = calculateQuotationValues(200);
+  describe("calculateQuotationValuesSync", () => {
+    // Using fixed settings: taxaAdesao=3%, desconto=20%
+    const taxaAdesao = 3;
+    const desconto = 20;
+
+    it("should calculate correct values from valorFipe and mensalidade", () => {
+      const valorFipe = 50000;
+      const mensalidade = 200;
+      const result = calculateQuotationValuesSync(valorFipe, mensalidade, taxaAdesao, desconto);
 
       expect(result.mensalidade).toBe(200);
-      expect(result.adesao).toBe(400); // 2x mensalidade
-      expect(result.adesaoDesconto).toBe(320); // 80% of adesao (20% discount)
+      expect(result.adesao).toBe(1500); // 3% of 50000
+      expect(result.adesaoDesconto).toBe(1200); // 80% of 1500 (20% discount)
     });
 
-    it("should handle decimal mensalidade", () => {
-      const result = calculateQuotationValues(201.67);
+    it("should handle decimal values", () => {
+      const valorFipe = 45000;
+      const mensalidade = 201.67;
+      const result = calculateQuotationValuesSync(valorFipe, mensalidade, taxaAdesao, desconto);
 
       expect(result.mensalidade).toBe(201.67);
-      expect(result.adesao).toBeCloseTo(403.34, 2);
-      expect(result.adesaoDesconto).toBeCloseTo(322.67, 2);
+      expect(result.adesao).toBeCloseTo(1350, 2); // 3% of 45000
+      expect(result.adesaoDesconto).toBeCloseTo(1080, 2); // 80% of 1350
     });
 
     it("should include cota participacao if provided", () => {
-      const result = calculateQuotationValues(200, 1500);
+      const valorFipe = 50000;
+      const mensalidade = 200;
+      const result = calculateQuotationValuesSync(valorFipe, mensalidade, taxaAdesao, desconto, 1500);
 
       expect(result.cotaParticipacao).toBe(1500);
     });
 
     it("should have null cota participacao if not provided", () => {
-      const result = calculateQuotationValues(200);
+      const valorFipe = 50000;
+      const mensalidade = 200;
+      const result = calculateQuotationValuesSync(valorFipe, mensalidade, taxaAdesao, desconto);
 
       expect(result.cotaParticipacao).toBeNull();
     });

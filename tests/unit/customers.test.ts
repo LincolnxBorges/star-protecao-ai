@@ -6,6 +6,7 @@ vi.mock("@/lib/db", () => ({
   db: {
     select: vi.fn(),
     insert: vi.fn(),
+    update: vi.fn(),
   },
 }));
 
@@ -29,7 +30,7 @@ describe("Customers Context", () => {
       state: "SP",
     };
 
-    it("should return existing customer when CPF already exists", async () => {
+    it("should update and return existing customer when CPF already exists", async () => {
       const { db } = await import("@/lib/db");
       const existingCustomer = {
         id: "existing-id",
@@ -44,9 +45,18 @@ describe("Customers Context", () => {
         }),
       } as never);
 
+      vi.mocked(db.update).mockReturnValue({
+        set: vi.fn().mockReturnValue({
+          where: vi.fn().mockReturnValue({
+            returning: vi.fn().mockResolvedValue([existingCustomer]),
+          }),
+        }),
+      } as never);
+
       const result = await findOrCreateByCpf(customerData);
 
       expect(result.id).toBe("existing-id");
+      expect(db.update).toHaveBeenCalled();
       expect(db.insert).not.toHaveBeenCalled();
     });
 
